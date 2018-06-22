@@ -1,0 +1,53 @@
+﻿<Window x:Class="WpfApplication3.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WpfApplication3"
+        mc:Ignorable="d"
+        Title="Genieratoring Window Of Compooter Learning Data" Height="384.013" Width="483.307">
+    <Grid Margin="0,0,12,2" RenderTransformOrigin="0.5,0.5">
+        <Grid.RenderTransform>
+            <TransformGroup>
+                <ScaleTransform/>
+                <SkewTransform/>
+                <RotateTransform/>
+                <TranslateTransform/>
+            </TransformGroup>
+        </Grid.RenderTransform>
+
+
+        <DataGrid Name="ClassGrid" Margin="24,37,272,135" AutoGenerateColumns="False" 
+                  ItemsSource="{Binding classes}" SelectionMode="Single" 
+                  SelectionChanged="ClassGrid_SelectionChanged" >
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Class Name" Binding="{Binding Key}" IsReadOnly="true"/>
+                <DataGridTextColumn Header="Size" Binding="{Binding Value}" />
+            </DataGrid.Columns>
+        </DataGrid>
+        <DataGrid Name="AttrGrid" Margin="212,37,96,135" AutoGenerateColumns="False"
+                  ItemsSource="{Binding attrs}" SelectionMode="Single" >
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding Key}" Header="Attr name" IsReadOnly="True" 
+                                    CanUserSort="False"/>
+                <DataGridTextColumn Binding="{Binding Value.range}" Header="Range" IsReadOnly="True"
+                                    CanUserSort="False"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <DataGrid Name="ClassAttrGrid" Margin="372,37,10,135" AutoGenerateColumns="False" 
+                  ItemsSource="{Binding Path=classAttrs, Mode=TwoWay}" SelectionMode="Single" 
+                  CellEditEnding="ClassAttrGrid_CellEditEnding">
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding Path=., Mode=TwoWay}" 
+                                    Header="Value" IsReadOnly="False" CanUserSort="False"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Button Margin="24,235,361,83" Content="Add class" Click="Button1_Click"/>
+        <Button Margin="24,274,361,42" Content="Delete class" Click="Button2_Click"/>
+        <Button Margin="359,235,26,83" Content="Add attr" Click="Button3_Click"/>
+        <Button Margin="359,274,26,42" Content="Delete attr" Click="Button4_Click"/>
+        <Button Margin="192,274,192,42" Content="Generate" Click="Button5_Click"/>
+        <Button Margin="192,315,192,0" Content="Extend data" Click="Button_Click"/>
+    </Grid>
+</Window>

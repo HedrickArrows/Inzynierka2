@@ -1,0 +1,17 @@
+﻿<Window x:Class="WpfApplication3.AddClassWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WpfApplication3"
+        mc:Ignorable="d"
+        Title="Add New Class..." Height="178.684" Width="202.194">
+    <Grid Margin="0,0,0,-9">
+        <TextBox Name="ClassName" Margin="10,10,87,112"/>
+        <TextBlock Text="Class Name" Margin="112,20,7,102"></TextBlock>
+        <Button Margin="27,95,99,33" Content="Add Class" Click="AddClass"></Button>
+        <Button Margin="112,95,14,33" Content="Cancel" Click="Exit"></Button>
+        <TextBox Name="ClassSize" Margin="10,51,87,71" TextChanged="ClassSize_TextChanged"/>
+        <TextBlock Text="Class Size" Margin="112,61,7,58"></TextBlock>
+    </Grid>
+</Window>

@@ -1,0 +1,26 @@
+﻿<Window x:Class="WpfApplication3.AddAttrWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WpfApplication3"
+        mc:Ignorable="d"
+        Title="Add New Attribute..." Height="278.37" Width="209.718">
+    <Grid Margin="0,0,0,0">
+        <TextBox Name="AttrName" Margin="10,9,89,202"/>
+        <TextBlock Text="Attr Name" Margin="118,9,0,202"/>
+        <ComboBox Name="AttrType" Margin="10,45,89,166" ItemsSource="{Binding at}"
+                  SelectionChanged="AttrType_SelectionChanged"/>
+        <TextBlock Text="Attr Type" Margin="118,45,0,166"/>
+        <TextBox Name="lowLimit" Margin="10,119,89,92" TextChanged="lowLimit_TextChanged" />
+        <TextBlock Name="loLim" Text="Lower Limit" Margin="118,119,0,92"/>
+        <TextBox Name="hiLimit" Margin="10,155,89,56" TextChanged="hiLimit_TextChanged"/>
+        <TextBlock Name="upLim" Text="Upper Limit" Margin="118,155,0,56"/>
+        <Button Name="AddAttr" Content="Add Attr" Click="AddAttr_Click" 
+                Margin="10,200,111,10" RenderTransformOrigin="0.938,0.373"/>
+        <Button Name="Cancel" Content="Cancel" Click="Cancel_Click" 
+                Margin="110,200,10,10" RenderTransformOrigin="0.938,0.373"/>
+        <TextBox Name="defValue" Margin="10,82,89,129" TextChanged="defValue_TextChanged"/>
+        <TextBlock Name="dVal" Text="Def Density" Margin="118,82,0,129"/>
+    </Grid>
+</Window>
