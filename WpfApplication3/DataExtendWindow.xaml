@@ -1,0 +1,17 @@
+﻿<Window x:Class="WpfApplication3.DataExtendWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WpfApplication3"
+        mc:Ignorable="d"
+        Title="DataExtendWindow" Height="657.805" Width="727.427">
+    <Grid>
+        <TextBox Name="FilePath" IsEnabled="False" Margin="24,0,533,588"/>
+        <Button Name="PathBtn" Margin="191,0,355,588" Content="Select..."/>
+        <Button Name="OpenBtn" Margin="369,0,168,588" Content="Open"/>
+        <DataGrid Name="DatumGrid" Margin="24,142,24,31">
+
+        </DataGrid>
+    </Grid>
+</Window>
