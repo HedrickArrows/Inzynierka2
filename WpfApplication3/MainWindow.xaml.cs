@@ -493,7 +493,8 @@ namespace WpfApplication3
 
                 //podzielić dane wejściowe i wygenerowane na klasy i artybuty
                 var readClass = new int[reading.Count];
-                var readAttr = new int[reading.Count, reading.ElementAt(0).Length-1].ToJagged();
+                var readAttr_d = new double[reading.Count, reading.ElementAt(0).Length-1].ToJagged();
+                var readAttr = new int[reading.Count, reading.ElementAt(0).Length - 1].ToJagged();
 
                 var stringIntCheatSheet = new Dictionary<string, int>[reading.ElementAt(0).Length];
                 for(int i = 0; i < stringIntCheatSheet.Length;i++)
@@ -509,12 +510,22 @@ namespace WpfApplication3
                             res = stringIntCheatSheet[y][ss];
                         }
                         if (y == 0) readClass[x] = res;
-                        else readAttr[x][y - 1] = res;
+                        else
+                        {
+                            readAttr[x][y - 1] = res;
+                            double rr = 0;
+                            if (!double.TryParse(ss, System.Globalization.NumberStyles.AllowDecimalPoint,
+                                    System.Globalization.NumberFormatInfo.InvariantInfo, out rr))
+                                readAttr_d[x][y - 1] = rr;
+                            else readAttr_d[x][y - 1] = res;
+                        }
                     }
                 }
 
                 var genClass = new int[generating.Count];
                 var genAttr = new int[generating.Count, generating.ElementAt(0).Length - 1].ToJagged();
+                var genAttr_d = new double[generating.Count, generating.ElementAt(0).Length - 1].ToJagged();
+
 
                 for (int x = 0; x < generating.Count; x++)
                 {
@@ -529,7 +540,15 @@ namespace WpfApplication3
                             res = stringIntCheatSheet[y][ss];
                         }
                         if (y == 0) genClass[x] = res;
-                        else genAttr[x][y - 1] = res;
+                        else
+                        {
+                            genAttr[x][y - 1] = res;
+                            double rr = 0;
+                            if (double.TryParse(ss, System.Globalization.NumberStyles.AllowDecimalPoint,
+                                    System.Globalization.NumberFormatInfo.InvariantInfo, out rr))
+                                genAttr_d[x][y - 1] = rr;
+                            else genAttr_d[x][y - 1] = res;
+                        }
                     }
                 }
 
@@ -538,8 +557,7 @@ namespace WpfApplication3
 
                 int correct=0, incorrect=0, correctknn = 0, incorrectknn = 0;
 
-                double[][] readAttr_d = readAttr.Select(xa => xa.Select(ya => (double)ya).ToArray()).ToArray(),
-                        genAttr_d = genAttr.Select(xa => xa.Select(ya => (double)ya).ToArray()).ToArray();
+                
 
                 
                 var learn = new NaiveBayesLearning();
