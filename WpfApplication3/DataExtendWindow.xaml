@@ -5,13 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfApplication3"
         mc:Ignorable="d"
-        Title="DataExtendWindow" Height="657.805" Width="727.427">
-    <Grid>
-        <TextBox Name="FilePath" IsEnabled="False" Margin="24,0,533,588"/>
-        <Button Name="PathBtn" Margin="191,0,355,588" Content="Select..."/>
-        <Button Name="OpenBtn" Margin="369,0,168,588" Content="Open"/>
-        <DataGrid Name="DatumGrid" Margin="24,142,24,31">
+        Title="Data Extending" Height="609.805" Width="713.927">
+    <Grid Margin="0,0,0,1">
+        <TextBox Name="FilePath" IsEnabled="False" Margin="188,10,24,530"/>
+        <Button Name="PathBtn" Margin="10,10,536,530" Content="Open file..." Click="PathBtn_Click"/>
+        <Button Name="OpenBtn" Margin="306,530,231,10" Content="Generate" Click="OpenBtn_Click"/>
+        <Button Name="CloseBtn" Margin="513,530,24,10" Content="Close" Click="CloseBtn_Click"/>
+        <Grid Margin="10,81,0,76">
+            <TextBlock Margin="473,0,0,390" Text="Class Column"/>
+            <ComboBox Name="ClsColBox" SelectionChanged="ClsColBox_SelectionChanged" Margin="567,-5,10,390"/>
+            <DataGrid Name="InputDataGrid" Margin="10,-24,241,24" CanUserAddRows="False" CanUserDeleteRows="False"
+                      AutoGenerateColumns="False"/>
+        </Grid>
+        <!--DataGrid Name="DatumGrid" Margin="24,142,24,31">
 
-        </DataGrid>
+        </-->
     </Grid>
 </Window>

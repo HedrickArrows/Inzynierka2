@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfApplication3"
         mc:Ignorable="d"
-        Title="Genieratoring Window Of Compooter Learning Data" Height="384.013" Width="483.307">
+        Title="Genieratoring Window Of Compooter Learning Data" Height="384.013" Width="483.307"
+        Closing="MainWindow_Closing">
     <Grid Margin="0,0,12,2" RenderTransformOrigin="0.5,0.5">
         <Grid.RenderTransform>
             <TransformGroup>
