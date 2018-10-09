@@ -187,16 +187,16 @@ namespace WpfApplication3
         {
             if (classes.Count < 2) {
                 var dialogResult = System.Windows.MessageBox.Show(
-                "Please add at least two classes to generate",
-                "Data testing - extended data", System.Windows.MessageBoxButton.OK,
+                "Please have at least two classes created to generate",
+                "Data generating error", System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Warning);
                 return;
             }
             if (attrs.Count < 1)
             {
                 var dialogResult = System.Windows.MessageBox.Show(
-                "Please add at least one attribute to generate",
-                "Data testing - extended data", System.Windows.MessageBoxButton.OK,
+                "Please have at least one attribute created to generate",
+                "Data generating error", System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Warning);
                 return;
             }

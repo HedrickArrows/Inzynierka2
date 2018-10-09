@@ -14,6 +14,10 @@
         <Grid Margin="10,81,0,76">
             <TextBlock Margin="473,0,0,390" Text="Class Column"/>
             <ComboBox Name="ClsColBox" SelectionChanged="ClsColBox_SelectionChanged" Margin="567,-5,10,390"/>
+            <TextBlock Margin="473,51,0,339" Text="Amt of Digits"/>
+            <ComboBox Name="FltPrecBox" SelectionChanged="FltPrecBox_SelectionChanged" Margin="567,51,10,334"/>
+            <TextBlock Margin="473,108,0,282" Text="Amt of New Data"/>
+            <ComboBox Name="DataAmtBox" SelectionChanged="DataAmtBox_SelectionChanged" Margin="567,108,10,277"/>
             <DataGrid Name="InputDataGrid" Margin="10,-24,241,24" CanUserAddRows="False" CanUserDeleteRows="False"
                       AutoGenerateColumns="False"/>
         </Grid>

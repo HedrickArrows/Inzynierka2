@@ -27,7 +27,11 @@ namespace WpfApplication3
         public Random rnd;
         public List<string[]> reading;
         List<int> clsColBoxSrc;
-        string[] attrType, attribTypes = { "integer", "double", "string" };
+        public string[] attrType, attribTypes = { "integer", "double", "string" }, 
+            precision = { "1", "2", "3", "4", "5", "6 ", "7", "8", "9", "10" }, 
+            newDataAmt = { "100", "250", "500", "1000", "2000"};
+        string fltPrec;
+        int newData;
         int clsCol;
         int classes, attribs;
         Dictionary<string, Tuple<int, Dictionary<int, Dictionary<string, int>>>> values;
@@ -40,6 +44,10 @@ namespace WpfApplication3
             attrType = new string[0];
             classes = 0; attribs = 0;
             InitializeComponent();
+            DataAmtBox.ItemsSource = newDataAmt;
+            DataAmtBox.SelectedIndex = 0;
+            FltPrecBox.ItemsSource = precision;
+            FltPrecBox.SelectedIndex = 0;
         }
 
         private void PathBtn_Click(object sender, RoutedEventArgs e)
@@ -268,6 +276,19 @@ namespace WpfApplication3
             this.Close();
         }
 
+        private void FltPrecBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            fltPrec = "0.";
+            for (int i = 0; i <= FltPrecBox.SelectedIndex; i++)
+                fltPrec += "0";
+
+        }
+
+        private void DataAmtBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            newData = int.Parse(newDataAmt[DataAmtBox.SelectedIndex]);
+        }
+
         private void swap(ref string a, ref string b)
         {
             string temp = a;
@@ -305,7 +326,7 @@ namespace WpfApplication3
                     }
 
             //czas generować ten szajs
-            var newStuff = new string[classes * reading.Count * 20, attribs + 1];
+            var newStuff = new string[newData, attribs + 1];
             for (int it = 0; it < newStuff.GetLength(0); it++)
             {
                 int cl = rnd.Next(classes); //rnd to zadelkarowany wcześniej Random //losowanie klasy
@@ -331,7 +352,7 @@ namespace WpfApplication3
                         double val = rnd.Next((int)extr.Item1, (int)extr.Item2) + rnd.NextDouble();
                         double r = probabilities[cl, v - 1].y(val);
                         if (attrType[v - 1].Equals("double"))
-                            newStuff[it, v] = r.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture);
+                            newStuff[it, v] = r.ToString(fltPrec, System.Globalization.CultureInfo.InvariantCulture);
                         else //if (attrType[v - 1].Equals("integer"))
                             newStuff[it, v] = Math.Round(r).ToString();
                     }//koniec losowania wartości atrybutu
