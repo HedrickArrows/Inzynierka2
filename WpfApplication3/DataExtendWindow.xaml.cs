@@ -485,9 +485,10 @@ namespace WpfApplication3
                 var knn = learnKnn.Learn(readAttr_d, readClass);
 
                 var testknn = knn.Decide(genAttr_d);
+                for(int i = 0; i< testknn.Length;i++)
                 foreach (var v in testknn)
                 {
-                    if (v.Equals(genClass[testknn.IndexOf(v)]))
+                    if (testknn[i].Equals(genClass[i]))
                         correctknn++;
                     else
                         incorrectknn++;
