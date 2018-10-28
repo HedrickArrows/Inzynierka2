@@ -18,6 +18,8 @@
             <ComboBox Name="FltPrecBox" SelectionChanged="FltPrecBox_SelectionChanged" Margin="567,51,10,334"/>
             <TextBlock Margin="473,108,0,282" Text="Amt of New Data"/>
             <ComboBox Name="DataAmtBox" SelectionChanged="DataAmtBox_SelectionChanged" Margin="567,108,10,277"/>
+            <TextBlock Margin="473,159,0,231" Text="Score Treshold"/>
+            <TextBox Name="ScoreValue" Margin="567,159,10,220" TextChanged="ScoreValue_TextChanged"/>
             <DataGrid Name="InputDataGrid" Margin="10,-24,241,24" CanUserAddRows="False" CanUserDeleteRows="False"
                       AutoGenerateColumns="False"/>
         </Grid>

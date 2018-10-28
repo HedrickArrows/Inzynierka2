@@ -34,6 +34,7 @@ namespace WpfApplication3
         int newData;
         int clsCol;
         int classes, attribs;
+        double scoreH;
         Dictionary<string, Tuple<int, Dictionary<int, Dictionary<string, int>>>> values;
         public DataExtendWindow()
         {
@@ -48,6 +49,8 @@ namespace WpfApplication3
             DataAmtBox.SelectedIndex = 0;
             FltPrecBox.ItemsSource = precision;
             FltPrecBox.SelectedIndex = 0;
+            ScoreValue.Text = "100";
+            scoreH = 100;
         }
 
         private void PathBtn_Click(object sender, RoutedEventArgs e)
@@ -276,6 +279,23 @@ namespace WpfApplication3
             this.Close();
         }
 
+        private void ScoreValue_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ValidateNumberText(ScoreValue);
+            if (int.Parse(ScoreValue.Text) > 100)
+                ScoreValue.Text = "100";
+            if (int.Parse(ScoreValue.Text) < 0)
+                ScoreValue.Text = "0";
+            scoreH = int.Parse(ScoreValue.Text);
+        }
+
+        private void ValidateNumberText(System.Windows.Controls.TextBox txt)
+        {
+            txt.Text = Regex.Replace(txt.Text, @"[^\d-]", string.Empty);
+            txt.SelectionStart = txt.Text.Length; // add some logic if length is 0
+            txt.SelectionLength = 0;
+        }
+
         private void FltPrecBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             fltPrec = "0.";
@@ -325,38 +345,94 @@ namespace WpfApplication3
                         probabilities[j, i] = new Spline3Deg(x, y);
                     }
 
+
+            //do sprawdzania punktacji później
+            //podzielić dane wejściowe i wygenerowane na klasy i artybuty
+            var readClass = new int[reading.Count];
+            var readAttr_d = new double[reading.Count, reading.ElementAt(0).Length - 1].ToJagged();
+
+            var stringIntCheatSheet = new Dictionary<string, int>[reading.ElementAt(0).Length];
+            for (int i = 0; i < stringIntCheatSheet.Length; i++)
+                stringIntCheatSheet[i] = new Dictionary<string, int>();
+
+            for (int x = 0; x < reading.Count; x++)
+            {
+                for (int y = 0; y < reading.ElementAt(0).Length; y++)
+                {
+                    double rr = 0;
+                    string ss = reading.ElementAt(x)[y];
+                    if (!double.TryParse(ss, System.Globalization.NumberStyles.AllowDecimalPoint,
+                                System.Globalization.NumberFormatInfo.InvariantInfo, out rr)
+                            || y == 0)
+                        {
+                            if (!stringIntCheatSheet[y].ContainsKey(ss))
+                                stringIntCheatSheet[y].Add(ss, stringIntCheatSheet[y].Count);
+                            rr = stringIntCheatSheet[y][ss];
+                        }
+                        if (y == 0) readClass[x] = (int)rr;
+                        else
+                            readAttr_d[x][y - 1] = rr;
+                    }
+                }
+
+            var learnKnn = new KNearestNeighbors(4);
+
+            var knn = learnKnn.Learn(readAttr_d, readClass);
+
+            double[] attrcr = new double[attribs];
+
             //czas generować ten szajs
             var newStuff = new string[newData, attribs + 1];
             for (int it = 0; it < newStuff.GetLength(0); it++)
             {
+
+                
                 int cl = rnd.Next(classes); //rnd to zadelkarowany wcześniej Random //losowanie klasy
                 newStuff[it, 0] = values.ElementAt(cl).Key;
-                for (int v = 1; v <= attribs; v++)
-                {  //losowanie wartości atrybutu
-                    if (attrType[v - 1].Equals("string"))
-                    {  //funkcja dyskretna
-                        int val = rnd.Next(values.ElementAt(cl).Value.Item1);
-                        int b = 0;
-                        foreach (var a in values.ElementAt(cl).Value.Item2[v])
-                        {
-                            if (val < (b += a.Value))
+                int safety = 0;
+                do
+                {
+                    for (int v = 1; v <= attribs; v++)
+                    {  //losowanie wartości atrybutu
+                        if (attrType[v - 1].Equals("string"))
+                        {  //funkcja dyskretna
+                            int val = rnd.Next(values.ElementAt(cl).Value.Item1);
+                            int b = 0;
+                            foreach (var a in values.ElementAt(cl).Value.Item2[v])
                             {
-                                newStuff[it, v] = a.Key; //na Monte Carlo
-                                break;
+                                if (val < (b += a.Value))
+                                {
+                                    newStuff[it, v] = a.Key; //na Monte Carlo
+                                    break;
+                                }
                             }
                         }
+                        else
+                        {  //funkcja ciągła
+                            Tuple<double, double> extr = probabilities[cl, v - 1].Limits();
+                            double val = rnd.Next((int)extr.Item1, (int)extr.Item2) + rnd.NextDouble();
+                            double r = probabilities[cl, v - 1].y(val);
+                            if (attrType[v - 1].Equals("double"))
+                                newStuff[it, v] = r.ToString(fltPrec, System.Globalization.CultureInfo.InvariantCulture);
+                            else //if (attrType[v - 1].Equals("integer"))
+                                newStuff[it, v] = Math.Round(r).ToString();
+                        }//koniec losowania wartości atrybutu
+                    }//koniec generowania obiektu
+                    if (++safety > 100) break;
+                    //do tabliczki do sprawdzenia punktacji
+                    for (int v = 1; v <= attribs; v++) {
+                        double rr = 0;
+                        string ss = newStuff[it, v];
+                        if (!double.TryParse(ss, System.Globalization.NumberStyles.AllowDecimalPoint,
+                                System.Globalization.NumberFormatInfo.InvariantInfo, out rr)) {
+                            if (!stringIntCheatSheet[v].ContainsKey(ss))
+                                stringIntCheatSheet[v].Add(ss, stringIntCheatSheet[v].Count);
+                            rr = stringIntCheatSheet[v][ss];
+                        }
+                        attrcr[v - 1] = rr;
                     }
-                    else
-                    {  //funkcja ciągła
-                        Tuple<double, double> extr = probabilities[cl, v - 1].Limits();
-                        double val = rnd.Next((int)extr.Item1, (int)extr.Item2) + rnd.NextDouble();
-                        double r = probabilities[cl, v - 1].y(val);
-                        if (attrType[v - 1].Equals("double"))
-                            newStuff[it, v] = r.ToString(fltPrec, System.Globalization.CultureInfo.InvariantCulture);
-                        else //if (attrType[v - 1].Equals("integer"))
-                            newStuff[it, v] = Math.Round(r).ToString();
-                    }//koniec losowania wartości atrybutu
-                }//koniec generowania obiektu
+                } while (knn.Score(attrcr, cl) < scoreH /100);
+
             }//koniec całego generowania
 
             //tu dać zapis do pliku
@@ -397,7 +473,7 @@ namespace WpfApplication3
             var dialogResult = System.Windows.MessageBox.Show("Do you want to test the generated data?", "Data testing - extended data", System.Windows.MessageBoxButton.YesNo);
             if (dialogResult == MessageBoxResult.Yes)
             {
-
+                /*
                 //podzielić dane wejściowe i wygenerowane na klasy i artybuty
                 var readClass = new int[reading.Count];
                 var readAttr_d = new double[reading.Count, reading.ElementAt(0).Length - 1].ToJagged();
@@ -414,7 +490,7 @@ namespace WpfApplication3
                         double rr = 0;
                         string ss = reading.ElementAt(x)[y];
                         if (!double.TryParse(ss, System.Globalization.NumberStyles.AllowDecimalPoint,
-                                    System.Globalization.NumberFormatInfo.InvariantInfo, out rr)/*int.TryParse(ss, out res)*/ 
+                                    System.Globalization.NumberFormatInfo.InvariantInfo, out rr)/*int.TryParse(ss, out res)*
                             || y == 0)
                         {
                             if (!stringIntCheatSheet[y].ContainsKey(ss))
@@ -431,9 +507,9 @@ namespace WpfApplication3
                                     System.Globalization.NumberFormatInfo.InvariantInfo, out rr))
                                 readAttr_d[x][y - 1] = rr;
                             else readAttr_d[x][y - 1] = res;
-                        }*/
+                        }*
                     }
-                }
+                }*/
 
                 var genClass = new int[generating.Count];
                 //var genAttr = new int[generating.Count, generating.ElementAt(0).Length - 1].ToJagged();
@@ -479,10 +555,7 @@ namespace WpfApplication3
                         incorrect++;
                 }
                 */
-
-                var learnKnn = new KNearestNeighbors(4);
-
-                var knn = learnKnn.Learn(readAttr_d, readClass);
+                
 
                 var testknn = knn.Decide(genAttr_d);
                 for(int i = 0; i< testknn.Length;i++)
