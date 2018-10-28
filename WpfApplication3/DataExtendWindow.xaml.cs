@@ -486,7 +486,7 @@ namespace WpfApplication3
 
                 var testknn = knn.Decide(genAttr_d);
                 for(int i = 0; i< testknn.Length;i++)
-                foreach (var v in testknn)
+                //foreach (var v in testknn)
                 {
                     if (testknn[i].Equals(genClass[i]))
                         correctknn++;
