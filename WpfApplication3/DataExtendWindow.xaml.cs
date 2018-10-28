@@ -401,7 +401,7 @@ namespace WpfApplication3
                 //podzielić dane wejściowe i wygenerowane na klasy i artybuty
                 var readClass = new int[reading.Count];
                 var readAttr_d = new double[reading.Count, reading.ElementAt(0).Length - 1].ToJagged();
-                var readAttr = new int[reading.Count, reading.ElementAt(0).Length - 1].ToJagged();
+                //var readAttr = new int[reading.Count, reading.ElementAt(0).Length - 1].ToJagged();
 
                 var stringIntCheatSheet = new Dictionary<string, int>[reading.ElementAt(0).Length];
                 for (int i = 0; i < stringIntCheatSheet.Length; i++)
@@ -411,29 +411,32 @@ namespace WpfApplication3
                 {
                     for (int y = 0; y < reading.ElementAt(0).Length; y++)
                     {
-                        int res = 0;
+                        double rr = 0;
                         string ss = reading.ElementAt(x)[y];
-                        if (!int.TryParse(ss, out res) || y == 0)
+                        if (!double.TryParse(ss, System.Globalization.NumberStyles.AllowDecimalPoint,
+                                    System.Globalization.NumberFormatInfo.InvariantInfo, out rr)/*int.TryParse(ss, out res)*/ 
+                            || y == 0)
                         {
                             if (!stringIntCheatSheet[y].ContainsKey(ss))
                                 stringIntCheatSheet[y].Add(ss, stringIntCheatSheet[y].Count);
-                            res = stringIntCheatSheet[y][ss];
+                            rr = stringIntCheatSheet[y][ss];
                         }
-                        if (y == 0) readClass[x] = res;
+                        if (y == 0) readClass[x] = (int)rr;
                         else
+                            readAttr_d[x][y - 1] = rr;/*
                         {
-                            readAttr[x][y - 1] = res;
+                            //readAttr[x][y - 1] = res;
                             double rr = 0;
                             if (!double.TryParse(ss, System.Globalization.NumberStyles.AllowDecimalPoint,
                                     System.Globalization.NumberFormatInfo.InvariantInfo, out rr))
                                 readAttr_d[x][y - 1] = rr;
                             else readAttr_d[x][y - 1] = res;
-                        }
+                        }*/
                     }
                 }
 
                 var genClass = new int[generating.Count];
-                var genAttr = new int[generating.Count, generating.ElementAt(0).Length - 1].ToJagged();
+                //var genAttr = new int[generating.Count, generating.ElementAt(0).Length - 1].ToJagged();
                 var genAttr_d = new double[generating.Count, generating.ElementAt(0).Length - 1].ToJagged();
 
 
@@ -441,29 +444,30 @@ namespace WpfApplication3
                 {
                     for (int y = 0; y < generating.ElementAt(0).Length; y++)
                     {
-                        int res = 0;
+                        double rr = 0;
                         string ss = generating.ElementAt(x)[y];
-                        if (!int.TryParse(ss, out res) || y == 0)
+                        if (!double.TryParse(ss, System.Globalization.NumberStyles.AllowDecimalPoint,
+                                    System.Globalization.NumberFormatInfo.InvariantInfo, out rr) || y == 0)
                         {
                             if (!stringIntCheatSheet[y].ContainsKey(ss))
                                 stringIntCheatSheet[y].Add(ss, stringIntCheatSheet[y].Count);
-                            res = stringIntCheatSheet[y][ss];
+                            rr = stringIntCheatSheet[y][ss];
                         }
-                        if (y == 0) genClass[x] = res;
-                        else
-                        {
-                            genAttr[x][y - 1] = res;
+                        if (y == 0) genClass[x] = (int)rr;
+                        else genAttr_d[x][y - 1] = rr;
+                        /*{
+                            //genAttr[x][y - 1] = res;
                             double rr = 0;
                             if (double.TryParse(ss, System.Globalization.NumberStyles.AllowDecimalPoint,
                                     System.Globalization.NumberFormatInfo.InvariantInfo, out rr))
                                 genAttr_d[x][y - 1] = rr;
                             else genAttr_d[x][y - 1] = res;
-                        }
+                        }*/
                     }
                 }
                 
-                int correct = 0, incorrect = 0, correctknn = 0, incorrectknn = 0;
-                
+                int /*correct = 0, incorrect = 0,*/ correctknn = 0, incorrectknn = 0;
+                /*
                 var learn = new NaiveBayesLearning();
                 NaiveBayes nb = learn.Learn(readAttr, readClass);
                 var test = nb.Decide(genAttr);
@@ -474,6 +478,7 @@ namespace WpfApplication3
                     else
                         incorrect++;
                 }
+                */
 
                 var learnKnn = new KNearestNeighbors(4);
 
@@ -488,8 +493,8 @@ namespace WpfApplication3
                         incorrectknn++;
                 }
 
-                System.Windows.MessageBox.Show("Naive Bayes Classification:\nGenerated data accuracy: " +
-                    100.0 * correct / (correct + incorrect) + "%\n" +
+                System.Windows.MessageBox.Show(/*"Naive Bayes Classification:\nGenerated data accuracy: " +
+                    100.0 * correct / (correct + incorrect) + "%\n" +*/
                    "K Nearest Neighbours Classification:\nGenerated data accuracy: " +
                    100.0 * correctknn / (correctknn + incorrectknn)
                    + "%\n", "Data Testing - extending dataset",
