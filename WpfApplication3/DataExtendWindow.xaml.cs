@@ -16,6 +16,7 @@ using Accord.MachineLearning;
 using Accord.MachineLearning.Bayes;
 using System.Text.RegularExpressions;
 using Accord.Math;
+using Accord.Math.Optimization.Losses;
 
 namespace WpfApplication3
 {
@@ -99,7 +100,7 @@ namespace WpfApplication3
             }
             clsColBoxSrc.Clear();
             for (int i = 0; i < attrType.Length; i++)
-                clsColBoxSrc.Add(i + 1);
+                clsColBoxSrc.Add(i);
             ClsColBox.ItemsSource = clsColBoxSrc;
             ClsColBox.SelectedIndex = 0;
             InputDataGrid.Columns.Clear();
@@ -567,11 +568,86 @@ namespace WpfApplication3
                         incorrectknn++;
                 }
 
+                //KROSWALIDACJAAAAAAAAAAAAAAAAAA
+
+                var crossvalidationRead = CrossValidation.Create(
+                            k: 4,
+                            learner: (p) => new KNearestNeighbors(k: 4),
+                            loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
+                            fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
+                            x: readAttr_d, y: readClass
+                            );
+                var resultRead = crossvalidationRead.Learn(readAttr_d, readClass);
+                // We can grab some information about the problem:
+                var numberOfSamplesRead = resultRead.NumberOfSamples;
+                var numberOfInputsRead = resultRead.NumberOfInputs;
+                var numberOfOutputsRead = resultRead.NumberOfOutputs;
+
+                var trainingErrorRead = resultRead.Training.Mean;
+                var validationErrorRead = resultRead.Validation.Mean;
+
+                var readCM = resultRead.ToConfusionMatrix(readAttr_d, readClass);
+                double readAccuracy = readCM.Accuracy;
+                //////////////////////////////////////////////////////////
+                var crossvalidationGen = CrossValidation.Create(
+                            k: 4,
+                            learner: (p) => new KNearestNeighbors(k: 4),
+                            loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
+                            fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
+                            x: genAttr_d, y: genClass
+                            );
+                var resultGen = crossvalidationRead.Learn(readAttr_d, readClass);
+                // We can grab some information about the problem:
+                var numberOfSamplesGen = resultRead.NumberOfSamples;
+                var numberOfInputsGen = resultRead.NumberOfInputs;
+                var numberOfOutputsGen = resultRead.NumberOfOutputs;
+
+                var trainingErrorGen = resultRead.Training.Mean;
+                var validationErrorGen = resultRead.Validation.Mean;
+                var genCM = resultGen.ToConfusionMatrix(readAttr_d, readClass);
+                double genAccuracy = genCM.Accuracy;
+                //////////////////////////////////////////////////////////
+                double[][] mixAttr_d = new double[genAttr_d.GetLength(0) + readAttr_d.GetLength(0),
+                    genAttr_d[0].Length].ToJagged();
+                int[] mixClass = new int[genClass.Length + readClass.Length];
+
+                Array.Copy(readClass, mixClass, readClass.Length);
+                Array.Copy(genClass, 0, mixClass, readClass.Length, genClass.Length);
+
+                Array.Copy(readAttr_d, mixAttr_d, readAttr_d.Length);
+                Array.Copy(genAttr_d, 0, mixAttr_d, readAttr_d.Length, genAttr_d.Length);
+
+                var crossvalidationMix = CrossValidation.Create(
+                            k: 4,
+                            learner: (p) => new KNearestNeighbors(k: 4),
+                            loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
+                            fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
+                            x: mixAttr_d, y: mixClass
+                            );
+                var resultMix = crossvalidationRead.Learn(readAttr_d, readClass);
+                // We can grab some information about the problem:
+                var numberOfSamplesMix = resultRead.NumberOfSamples;
+                var numberOfInputsMix = resultRead.NumberOfInputs;
+                var numberOfOutputsMix = resultRead.NumberOfOutputs;
+
+                var trainingErrorMix = resultRead.Training.Mean;
+                var validationErrorMix = resultRead.Validation.Mean;
+
+                var mixCM = resultMix.ToConfusionMatrix(readAttr_d, readClass);
+                double mixAccuracy = mixCM.Accuracy;
+
+
                 System.Windows.MessageBox.Show(/*"Naive Bayes Classification:\nGenerated data accuracy: " +
                     100.0 * correct / (correct + incorrect) + "%\n" +*/
-                   "K Nearest Neighbours Classification:\nGenerated data accuracy: " +
-                   100.0 * correctknn / (correctknn + incorrectknn)
-                   + "%\n", "Data Testing - extending dataset",
+                   "K Nearest Neighbours Classification:\nGenerated data correct ratio: " +
+                   100.0 * correctknn / (correctknn + incorrectknn) + "%\n" + 
+                   "Initial Data X-Validation Accuracy: " 
+                   + (100.0 * readAccuracy).ToString("0.00",System.Globalization.CultureInfo.InvariantCulture)
+                   + "%\n" + "Generated Data X-Validation Accuracy: " 
+                   + (100.0 * genAccuracy).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
+                   + "%\n" + "Mixed Data X-Validation Accuracy: " 
+                   + (100.0 * mixAccuracy).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
+                   + "%\n" , "Data Testing - extending dataset" ,
                     System.Windows.MessageBoxButton.OK);
 
             }

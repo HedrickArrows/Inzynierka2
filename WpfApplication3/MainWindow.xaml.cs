@@ -277,9 +277,9 @@ namespace WpfApplication3
                             );
                         var result2 = crossvalidation.Learn(inputs_d, outputs);
                         // We can grab some information about the problem:
-                            numberOfSamples = result.NumberOfSamples;
-                            numberOfInputs = result.NumberOfInputs;
-                            numberOfOutputs = result.NumberOfOutputs;
+                            numberOfSamples = result2.NumberOfSamples;
+                            numberOfInputs = result2.NumberOfInputs;
+                            numberOfOutputs = result2.NumberOfOutputs;
 
                         trainingError = result2.Training.Mean;
                         validationError = result2.Validation.Mean;
