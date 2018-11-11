@@ -17,6 +17,10 @@ using Accord.MachineLearning.Bayes;
 using System.Text.RegularExpressions;
 using Accord.Math;
 using Accord.Math.Optimization.Losses;
+using Accord.MachineLearning.VectorMachines;
+using Accord.MachineLearning.VectorMachines.Learning;
+using Accord.Statistics.Kernels;
+using Accord.MachineLearning.Performance;
 
 namespace WpfApplication3
 {
@@ -474,43 +478,6 @@ namespace WpfApplication3
             var dialogResult = System.Windows.MessageBox.Show("Do you want to test the generated data?", "Data testing - extended data", System.Windows.MessageBoxButton.YesNo);
             if (dialogResult == MessageBoxResult.Yes)
             {
-                /*
-                //podzielić dane wejściowe i wygenerowane na klasy i artybuty
-                var readClass = new int[reading.Count];
-                var readAttr_d = new double[reading.Count, reading.ElementAt(0).Length - 1].ToJagged();
-                //var readAttr = new int[reading.Count, reading.ElementAt(0).Length - 1].ToJagged();
-
-                var stringIntCheatSheet = new Dictionary<string, int>[reading.ElementAt(0).Length];
-                for (int i = 0; i < stringIntCheatSheet.Length; i++)
-                    stringIntCheatSheet[i] = new Dictionary<string, int>();
-
-                for (int x = 0; x < reading.Count; x++)
-                {
-                    for (int y = 0; y < reading.ElementAt(0).Length; y++)
-                    {
-                        double rr = 0;
-                        string ss = reading.ElementAt(x)[y];
-                        if (!double.TryParse(ss, System.Globalization.NumberStyles.AllowDecimalPoint,
-                                    System.Globalization.NumberFormatInfo.InvariantInfo, out rr)/*int.TryParse(ss, out res)*
-                            || y == 0)
-                        {
-                            if (!stringIntCheatSheet[y].ContainsKey(ss))
-                                stringIntCheatSheet[y].Add(ss, stringIntCheatSheet[y].Count);
-                            rr = stringIntCheatSheet[y][ss];
-                        }
-                        if (y == 0) readClass[x] = (int)rr;
-                        else
-                            readAttr_d[x][y - 1] = rr;/*
-                        {
-                            //readAttr[x][y - 1] = res;
-                            double rr = 0;
-                            if (!double.TryParse(ss, System.Globalization.NumberStyles.AllowDecimalPoint,
-                                    System.Globalization.NumberFormatInfo.InvariantInfo, out rr))
-                                readAttr_d[x][y - 1] = rr;
-                            else readAttr_d[x][y - 1] = res;
-                        }*
-                    }
-                }*/
 
                 var genClass = new int[generating.Count];
                 //var genAttr = new int[generating.Count, generating.ElementAt(0).Length - 1].ToJagged();
@@ -532,31 +499,50 @@ namespace WpfApplication3
                         }
                         if (y == 0) genClass[x] = (int)rr;
                         else genAttr_d[x][y - 1] = rr;
-                        /*{
-                            //genAttr[x][y - 1] = res;
-                            double rr = 0;
-                            if (double.TryParse(ss, System.Globalization.NumberStyles.AllowDecimalPoint,
-                                    System.Globalization.NumberFormatInfo.InvariantInfo, out rr))
-                                genAttr_d[x][y - 1] = rr;
-                            else genAttr_d[x][y - 1] = res;
-                        }*/
+                        
+                    }
+                }
+
+                //przerobienie na tablicę intów, z przesunięciem dobli o precyzję
+                var genAttr_i = new int[generating.Count, generating.ElementAt(0).Length - 1].ToJagged();
+                var readAttr_i = new int[reading.Count, reading.ElementAt(0).Length - 1].ToJagged();
+
+                int shift = (int)Math.Pow(10, FltPrecBox.SelectedIndex + 1);
+                for (int x = 0; x < generating.Count; x++)
+                {
+                    for (int y = 0; y < generating.ElementAt(0).Length -1; y++) {
+                        if (attrType[y].Equals("double"))
+                            genAttr_i[x][y] = (int)(genAttr_d[x][y] * shift);
+                        else
+                            genAttr_i[x][y] = (int)genAttr_d[x][y];
+                    }
+                }
+                for (int x = 0; x < reading.Count; x++)
+                {
+                    for (int y = 0; y < reading.ElementAt(0).Length -1; y++)
+                    {
+                        if (attrType[y].Equals("double"))
+                            readAttr_i[x][y] = (int)(readAttr_d[x][y] * shift);
+                        else
+                            readAttr_i[x][y] = (int)readAttr_d[x][y];
                     }
                 }
                 
-                int /*correct = 0, incorrect = 0,*/ correctknn = 0, incorrectknn = 0;
-                /*
+
+                int correctnb = 0, incorrectnb = 0, correctknn = 0, incorrectknn = 0, correctsvm = 0, incorrectsvm = 0;
+                
                 var learn = new NaiveBayesLearning();
-                NaiveBayes nb = learn.Learn(readAttr, readClass);
-                var test = nb.Decide(genAttr);
+                NaiveBayes nb = learn.Learn(readAttr_i, readClass);
+                var test = nb.Decide(genAttr_i);
                 foreach (var v in test)
                 {
                     if (v.Equals(genClass[test.IndexOf(v)]))
-                        correct++;
+                        correctnb++;
                     else
-                        incorrect++;
+                        incorrectnb++;
                 }
-                */
                 
+                /////////////////////////////////////////////////////////////////////////
 
                 var testknn = knn.Decide(genAttr_d);
                 for(int i = 0; i< testknn.Length;i++)
@@ -567,9 +553,69 @@ namespace WpfApplication3
                     else
                         incorrectknn++;
                 }
+                /////////////////////////////////////////////////////////////////////////
+                
+                
+                var teach = new MultilabelSupportVectorLearning<Gaussian>()
+                {    
+                    // Configure the learning algorithm to use SMO to train the
+                     //  underlying SVMs in each of the binary class subproblems.
+                    Learner = (param) => new SequentialMinimalOptimization<Gaussian>()
+                    {
+                        // Estimate a suitable guess for the Gaussian kernel's parameters.
+                        // This estimate can serve as a starting point for a grid search.
+                        UseKernelEstimation = true
+                    }
+                };
+                var svm = teach.Learn(readAttr_d, readClass);
+                // Create the multi-class learning algorithm for the machine
+                var calibration = new MultilabelSupportVectorLearning<Gaussian>()
+                {
+                    Model = svm, // We will start with an existing machine
+
+                    // Configure the learning algorithm to use SMO to train the
+                    //  underlying SVMs in each of the binary class subproblems.
+                    Learner = (param) => new ProbabilisticOutputCalibration<Gaussian>()
+                    {
+                        Model = param.Model // Start with an existing machine
+                    }
+                };
+                // Configure parallel execution options
+                calibration.ParallelOptions.MaxDegreeOfParallelism = 1;
+
+                // Learn a machine
+                var svmcal = calibration.Learn(readAttr_d, readClass);
+
+                var testsvm = svmcal.Decide(genAttr_d);
+                for (int i = 0; i < testsvm.Length; i++)
+                //foreach (var v in testknn)
+                {
+                    if (testsvm[i][genClass[i]])
+                        correctsvm++;
+                    else
+                        incorrectsvm++;
+                }
+                ////////////////////////////////////////////////////////////
+
+                double[][] mixAttr_d = new double[genAttr_d.GetLength(0) + readAttr_d.GetLength(0),
+                   genAttr_d[0].Length].ToJagged();
+                int[] mixClass = new int[genClass.Length + readClass.Length];
+
+                Array.Copy(readClass, mixClass, readClass.Length);
+                Array.Copy(genClass, 0, mixClass, readClass.Length, genClass.Length);
+
+                Array.Copy(readAttr_d, mixAttr_d, readAttr_d.Length);
+                Array.Copy(genAttr_d, 0, mixAttr_d, readAttr_d.Length, genAttr_d.Length);
+
+                int[][] mixAttr_i = new int[genAttr_i.GetLength(0) + readAttr_i.GetLength(0),
+                    genAttr_i[0].Length].ToJagged();
+
+                Array.Copy(readAttr_i, mixAttr_i, readAttr_i.Length);
+                Array.Copy(genAttr_i, 0, mixAttr_i, readAttr_i.Length, genAttr_i.Length);
 
                 //KROSWALIDACJAAAAAAAAAAAAAAAAAA
-
+                //KNN
+                
                 var crossvalidationRead = CrossValidation.Create(
                             k: 4,
                             learner: (p) => new KNearestNeighbors(k: 4),
@@ -596,27 +642,18 @@ namespace WpfApplication3
                             fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
                             x: genAttr_d, y: genClass
                             );
-                var resultGen = crossvalidationRead.Learn(readAttr_d, readClass);
+                var resultGen = crossvalidationGen.Learn(genAttr_d, genClass);
                 // We can grab some information about the problem:
-                var numberOfSamplesGen = resultRead.NumberOfSamples;
-                var numberOfInputsGen = resultRead.NumberOfInputs;
-                var numberOfOutputsGen = resultRead.NumberOfOutputs;
+                var numberOfSamplesGen = resultGen.NumberOfSamples;
+                var numberOfInputsGen = resultGen.NumberOfInputs;
+                var numberOfOutputsGen = resultGen.NumberOfOutputs;
 
-                var trainingErrorGen = resultRead.Training.Mean;
-                var validationErrorGen = resultRead.Validation.Mean;
-                var genCM = resultGen.ToConfusionMatrix(readAttr_d, readClass);
+                var trainingErrorGen = resultGen.Training.Mean;
+                var validationErrorGen = resultGen.Validation.Mean;
+                var genCM = resultGen.ToConfusionMatrix(genAttr_d, genClass);
                 double genAccuracy = genCM.Accuracy;
                 //////////////////////////////////////////////////////////
-                double[][] mixAttr_d = new double[genAttr_d.GetLength(0) + readAttr_d.GetLength(0),
-                    genAttr_d[0].Length].ToJagged();
-                int[] mixClass = new int[genClass.Length + readClass.Length];
-
-                Array.Copy(readClass, mixClass, readClass.Length);
-                Array.Copy(genClass, 0, mixClass, readClass.Length, genClass.Length);
-
-                Array.Copy(readAttr_d, mixAttr_d, readAttr_d.Length);
-                Array.Copy(genAttr_d, 0, mixAttr_d, readAttr_d.Length, genAttr_d.Length);
-
+               
                 var crossvalidationMix = CrossValidation.Create(
                             k: 4,
                             learner: (p) => new KNearestNeighbors(k: 4),
@@ -624,30 +661,181 @@ namespace WpfApplication3
                             fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
                             x: mixAttr_d, y: mixClass
                             );
-                var resultMix = crossvalidationRead.Learn(readAttr_d, readClass);
+                var resultMix = crossvalidationMix.Learn(readAttr_d, readClass);
                 // We can grab some information about the problem:
-                var numberOfSamplesMix = resultRead.NumberOfSamples;
-                var numberOfInputsMix = resultRead.NumberOfInputs;
-                var numberOfOutputsMix = resultRead.NumberOfOutputs;
+                var numberOfSamplesMix = resultMix.NumberOfSamples;
+                var numberOfInputsMix = resultMix.NumberOfInputs;
+                var numberOfOutputsMix = resultMix.NumberOfOutputs;
 
-                var trainingErrorMix = resultRead.Training.Mean;
-                var validationErrorMix = resultRead.Validation.Mean;
+                var trainingErrorMix = resultMix.Training.Mean;
+                var validationErrorMix = resultMix.Validation.Mean;
 
-                var mixCM = resultMix.ToConfusionMatrix(readAttr_d, readClass);
+                var mixCM = resultMix.ToConfusionMatrix(mixAttr_d, mixClass);
                 double mixAccuracy = mixCM.Accuracy;
 
+                //NB
+                var crossvalidationReadnb = CrossValidation.Create(
+                            k: 4,
+                            learner: (p) => new NaiveBayesLearning(),
+                            loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
+                            fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
+                            x: readAttr_i, y: readClass
+                            );
+                var resultReadnb = crossvalidationReadnb.Learn(readAttr_i, readClass);
+                // We can grab some information about the problem:
+                var numberOfSamplesReadnb = resultReadnb.NumberOfSamples;
+                var numberOfInputsReadnb = resultReadnb.NumberOfInputs;
+                var numberOfOutputsReadnb = resultReadnb.NumberOfOutputs;
 
-                System.Windows.MessageBox.Show(/*"Naive Bayes Classification:\nGenerated data accuracy: " +
-                    100.0 * correct / (correct + incorrect) + "%\n" +*/
-                   "K Nearest Neighbours Classification:\nGenerated data correct ratio: " +
+                var trainingErrorReadnb = resultReadnb.Training.Mean;
+                var validationErrorReadnb = resultReadnb.Validation.Mean;
+
+                var readCMnb = resultReadnb.ToConfusionMatrix(readAttr_i, readClass);
+                double readAccuracynb = readCMnb.Accuracy;
+                //////////////////////////////////////////////////////////
+                var crossvalidationGennb = CrossValidation.Create(
+                            k: 4,
+                            learner: (p) => new NaiveBayesLearning(),
+                            loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
+                            fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
+                            x: genAttr_i, y: genClass
+                            );
+                var resultGennb = crossvalidationGennb.Learn(genAttr_i, genClass);
+                // We can grab some information about the problem:
+                var numberOfSamplesGennb = resultGennb.NumberOfSamples;
+                var numberOfInputsGennb = resultGennb.NumberOfInputs;
+                var numberOfOutputsGennb = resultGennb.NumberOfOutputs;
+
+                var trainingErrorGennb = resultGennb.Training.Mean;
+                var validationErrorGennb = resultGennb.Validation.Mean;
+                var genCMnb = resultGennb.ToConfusionMatrix(genAttr_i, genClass);
+                double genAccuracynb = genCMnb.Accuracy;
+                //////////////////////////////////////////////////////////
+                
+                var crossvalidationMixnb = CrossValidation.Create(
+                            k: 4,
+                            learner: (p) => new NaiveBayesLearning(),
+                            loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
+                            fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
+                            x: mixAttr_i, y: mixClass
+                            );
+                var resultMixnb = crossvalidationMixnb.Learn(mixAttr_i, mixClass);
+                // We can grab some information about the problem:
+                var numberOfSamplesMixnb = resultMixnb.NumberOfSamples;
+                var numberOfInputsMixnb = resultMixnb.NumberOfInputs;
+                var numberOfOutputsMixnb = resultMixnb.NumberOfOutputs;
+
+                var trainingErrorMixnb = resultMixnb.Training.Mean;
+                var validationErrorMixnb = resultMixnb.Validation.Mean;
+
+                var mixCMnb = resultMixnb.ToConfusionMatrix(mixAttr_i, mixClass);
+                double mixAccuracynb = mixCMnb.Accuracy;
+
+                //SVM
+
+                ////ZAKOMENTOWAĆ PÓKI SIĘ NIE OGARNIE CO JEST NIE TAK
+                /*
+                var crossvalidationReadsvm = CrossValidation.Create(
+                            k: 4,
+                            learner: (p) => new MultilabelSupportVectorLearning<Gaussian>()
+                            { Learner = (param) => new SequentialMinimalOptimization<Gaussian>()
+                            { UseKernelEstimation = true  }
+                            },
+                            loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
+                            fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
+                            x: readAttr_d, y: readClass
+                            );
+                //crossvalidationReadsvm.ParallelOptions.MaxDegreeOfParallelism = 1;
+                var resultReadsvm = crossvalidationReadsvm.Learn(readAttr_d, readClass);
+                // We can grab some information about the problem:
+                var numberOfSamplesReadsvm = resultReadsvm.NumberOfSamples;
+                var numberOfInputsReadsvm = resultReadsvm.NumberOfInputs;
+                var numberOfOutputsReadsvm = resultReadsvm.NumberOfOutputs;
+
+                var trainingErrorReadsvm = resultReadsvm.Training.Mean;
+                var validationErrorReadsvm = resultReadsvm.Validation.Mean;
+
+                var readCMsvm = resultReadsvm.ToConfusionMatrix(readAttr_d, readClass);
+                double readAccuracysvm = readCMsvm.Accuracy;
+                
+                //////////////////////////////////////////////////////////
+                var crossvalidationGensvm = CrossValidation.Create(
+                            k: 4,
+                            learner: (p) => new MultilabelSupportVectorLearning<Gaussian>()
+                            {
+                                Learner = (param) => new SequentialMinimalOptimization<Gaussian>()
+                                { UseKernelEstimation = true }
+                            },
+                            loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
+                            fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
+                            x: genAttr_d, y: genClass
+                            );
+                var resultGensvm = crossvalidationGensvm.Learn(genAttr_d, genClass);
+                // We can grab some information about the problem:
+                var numberOfSamplesGensvm = resultGensvm.NumberOfSamples;
+                var numberOfInputsGensvm = resultGensvm.NumberOfInputs;
+                var numberOfOutputsGensvm = resultGensvm.NumberOfOutputs;
+
+                var trainingErrorGensvm = resultGensvm.Training.Mean;
+                var validationErrorGensvm = resultGensvm.Validation.Mean;
+                var genCMsvm = resultGensvm.ToConfusionMatrix(genAttr_d, genClass);
+                double genAccuracysvm = genCMsvm.Accuracy;
+                //////////////////////////////////////////////////////////
+
+                var crossvalidationMixsvm = CrossValidation.Create(
+                            k: 4,
+                            learner: (p) => new MultilabelSupportVectorLearning<Gaussian>()
+                            {
+                                Learner = (param) => new SequentialMinimalOptimization<Gaussian>()
+                                { UseKernelEstimation = true }
+                            },
+                            loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
+                            fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
+                            x: mixAttr_d, y: mixClass
+                            );
+                var resultMixsvm = crossvalidationMixsvm.Learn(mixAttr_d, mixClass);
+                // We can grab some information about the problem:
+                var numberOfSamplesMixsvm = resultMixsvm.NumberOfSamples;
+                var numberOfInputsMixsvm = resultMixsvm.NumberOfInputs;
+                var numberOfOutputsMixsvm = resultMixsvm.NumberOfOutputs;
+
+                var trainingErrorMixsvm = resultMixsvm.Training.Mean;
+                var validationErrorMixsvm = resultMixsvm.Validation.Mean;
+
+                var mixCMsvm = resultMixsvm.ToConfusionMatrix(mixAttr_d, mixClass);
+                double mixAccuracysvm = mixCMsvm.Accuracy;
+                */
+                /////////////////////////////////////////////////
+
+                System.Windows.MessageBox.Show(
+                   "K Nearest Neighbours Classification:\nGenerated Data Correct Ratio: " +
                    100.0 * correctknn / (correctknn + incorrectknn) + "%\n" + 
-                   "Initial Data X-Validation Accuracy: " 
+                   "Original Data X-Validation Accuracy: " 
                    + (100.0 * readAccuracy).ToString("0.00",System.Globalization.CultureInfo.InvariantCulture)
                    + "%\n" + "Generated Data X-Validation Accuracy: " 
                    + (100.0 * genAccuracy).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
                    + "%\n" + "Mixed Data X-Validation Accuracy: " 
                    + (100.0 * mixAccuracy).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
-                   + "%\n" , "Data Testing - extending dataset" ,
+                   + "%\n" 
+                   +"\n\n" + "Naive Bayes Classification:\nGenerated Data Correct Ratio: " +
+                   100.0 * correctnb / (correctnb + incorrectnb) + "%\n" +
+                   "Original Data X-Validation Accuracy: "
+                   + (100.0 * readAccuracynb).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
+                   + "%\n" + "Generated Data X-Validation Accuracy: "
+                   + (100.0 * genAccuracynb).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
+                   + "%\n" + "Mixed Data X-Validation Accuracy: "
+                   + (100.0 * mixAccuracynb).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
+                   + "%\n" +
+                   "\n\n" + "Support Vector Machine Classification:\nGenerated Data Correct Ratio: " +
+                   100.0 * correctsvm / (correctsvm + incorrectsvm)/* + "%\n" +
+                   "Original Data X-Validation Accuracy: "
+                   + (100.0 * readAccuracysvm).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
+                   + "%\n" + "Generated Data X-Validation Accuracy: "
+                   + (100.0 * genAccuracysvm).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
+                   + "%\n" + "Mixed Data X-Validation Accuracy: "
+                   + (100.0 * mixAccuracysvm).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)*/
+                   + "%\n", 
+                   "Data Testing - extending dataset",
                     System.Windows.MessageBoxButton.OK);
 
             }
