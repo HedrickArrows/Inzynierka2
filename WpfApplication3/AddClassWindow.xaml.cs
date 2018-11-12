@@ -21,13 +21,14 @@ namespace WpfApplication3
     /// </summary>
     public partial class AddClassWindow : Window
     {
-        public List<KeyValuePair<string, int>> cl;
+        public List<KeyValuePair<string, float>> cl;
         public List<KeyValuePair<string, MainWindow.Attribute>> a;
-        public List<List<int>> cla;
+        public List<List<float>> cla;
         public MainWindow p;
-        private List<int> temp { get; set; }
-        public AddClassWindow(List<KeyValuePair<string, int>> classes,List<KeyValuePair<string, MainWindow.Attribute>> attributes,
-            List<List<int>> lists, MainWindow parent)
+        private List<float> temp { get; set; }
+        public AddClassWindow(List<KeyValuePair<string, float>> classes,
+            List<KeyValuePair<string, MainWindow.Attribute>> attributes,
+            List<List<float>> lists, MainWindow parent)
         {
             cl = classes;
             p = parent;
@@ -46,10 +47,10 @@ namespace WpfApplication3
         {
             try
             {
-                cl.Add(new KeyValuePair<string, int>(ClassName.Text, Int32.Parse(ClassSize.Text)));
+                cl.Add(new KeyValuePair<string, float>(ClassName.Text, Int32.Parse(ClassSize.Text)));
                 p.ClassGrid.ItemsSource = null;
                 p.ClassGrid.ItemsSource = cl;
-                temp = new List<int>();
+                temp = new List<float>();
                 foreach (KeyValuePair<string, MainWindow.Attribute> k in a) {
                     temp.Add(k.Value.getD());
                 }

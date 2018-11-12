@@ -20,27 +20,28 @@ namespace WpfApplication3
     /// </summary>
     public partial class AddAttrWindow : Window
     {
-        public List<KeyValuePair<string, int>> cl;
+        public List<KeyValuePair<string, float>> cl;
         public List<KeyValuePair<string, MainWindow.Attribute>> a;
-        public List<List<int>> cla;
+        public List<List<float>> cla;
         public MainWindow p;
         public List<string> at;
-        public AddAttrWindow(List<KeyValuePair<string, int>> classes, List<KeyValuePair<string, MainWindow.Attribute>> attributes,
-            List<List<int>> lists, MainWindow parent)
+        public AddAttrWindow(List<KeyValuePair<string, float>> classes, 
+            List<KeyValuePair<string, MainWindow.Attribute>> attributes,
+            List<List<float>> lists, MainWindow parent)
         {
             cl = classes;
             p = parent;
             a = attributes;
             cla = lists;
             InitializeComponent();
-            at = new List<string> { "Binary", "Integer" };
+            at = new List<string> { "Binary", "Integer", "Float" };
             AttrType.ItemsSource = at;
             AttrType.SelectedIndex = 0;
         }
 
         private void AttrType_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (AttrType.SelectedIndex.Equals(1))
+            if (!AttrType.SelectedIndex.Equals(0))
             {
                 LinearGradientBrush myBrush = new LinearGradientBrush();
                 myBrush.GradientStops.Add(new GradientStop(Colors.White, 1.0));
@@ -75,21 +76,21 @@ namespace WpfApplication3
         {
             try
             {
-                /*
-                if (!String.IsNullOrEmpty(defValue.Text) &&
-                    Int32.Parse(defValue.Text) >= Int32.Parse(hiLimit.Text) 
-                    && AttrType.SelectedIndex.Equals(1))
-                    defValue.Text = (Int32.Parse(hiLimit.Text) - 1).ToString();
-                if (!String.IsNullOrEmpty(defValue.Text) &&
-                    Int32.Parse(defValue.Text) < Int32.Parse(lowLimit.Text) 
-                    && AttrType.SelectedIndex.Equals(1))
-                    defValue.Text = lowLimit.Text;
-                */
-
                 MainWindow.Attribute attr = null;
                 if (AttrType.SelectedIndex.Equals(0))
                 {
                     attr = new MainWindow.BinaryAttribute(Int32.Parse(defValue.Text));
+                }
+                else if (AttrType.SelectedIndex.Equals(2)) {
+                    attr = new MainWindow.FloatAttribute(float.Parse(lowLimit.Text,
+                        System.Globalization.NumberStyles.AllowDecimalPoint,
+                                    System.Globalization.NumberFormatInfo.InvariantInfo),
+                                    float.Parse(hiLimit.Text,
+                        System.Globalization.NumberStyles.AllowDecimalPoint,
+                                    System.Globalization.NumberFormatInfo.InvariantInfo),
+                                    float.Parse(defValue.Text,
+                        System.Globalization.NumberStyles.AllowDecimalPoint,
+                                    System.Globalization.NumberFormatInfo.InvariantInfo));
                 }
                 else
                 {
@@ -98,7 +99,7 @@ namespace WpfApplication3
 
                 }
                 a.Add(new KeyValuePair<string, MainWindow.Attribute>(AttrName.Text, attr));
-                foreach (List<int> list in cla)
+                foreach (List<float> list in cla)
                 {
                     list.Add(attr.getD());
                 }
@@ -111,7 +112,10 @@ namespace WpfApplication3
         }
 
         private void ValidateNumberText(TextBox txt) {
-            txt.Text = Regex.Replace(txt.Text, @"[^\d-]", string.Empty);
+            if(AttrType.SelectedIndex.Equals(2))
+                txt.Text = Regex.Replace(txt.Text, @"[^\d-.]", string.Empty);
+            else
+                txt.Text = Regex.Replace(txt.Text, @"[^\d-]", string.Empty);
             txt.SelectionStart = txt.Text.Length; // add some logic if length is 0
             txt.SelectionLength = 0;
         }
@@ -124,27 +128,11 @@ namespace WpfApplication3
         private void lowLimit_TextChanged(object sender, TextChangedEventArgs e)
         {
             ValidateNumberText(lowLimit);
-            /*
-            if (!String.IsNullOrEmpty(defValue.Text) &&
-                Int32.Parse(defValue.Text) < Int32.Parse(lowLimit.Text))
-                defValue.Text = lowLimit.Text;
-            if (!String.IsNullOrEmpty(hiLimit.Text) &&
-                Int32.Parse(hiLimit.Text) <= Int32.Parse(lowLimit.Text))
-                lowLimit.Text = (Int32.Parse(hiLimit.Text) - 1).ToString();
-                */
         }
 
         private void hiLimit_TextChanged(object sender, TextChangedEventArgs e)
         {
             ValidateNumberText(hiLimit);
-            /*
-            if (!String.IsNullOrEmpty(defValue.Text) &&
-                Int32.Parse(defValue.Text) >= Int32.Parse(hiLimit.Text))
-                defValue.Text = (Int32.Parse(hiLimit.Text) - 1).ToString();
-            if (!String.IsNullOrEmpty(lowLimit.Text) &&
-                Int32.Parse(lowLimit.Text) >= Int32.Parse(hiLimit.Text))
-                hiLimit.Text = (Int32.Parse(lowLimit.Text) + 1).ToString();
-                */
         }
     }
 }

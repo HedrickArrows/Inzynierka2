@@ -422,6 +422,12 @@ namespace WpfApplication3
                             else //if (attrType[v - 1].Equals("integer"))
                                 newStuff[it, v] = Math.Round(r).ToString();
                         }//koniec losowania wartości atrybutu
+                        ///ekstra warunek bezpieczeństwa, bo czasami trafiają się NULLe
+                        if (string.IsNullOrEmpty(newStuff[it, v])) {
+                            v--;
+                            continue; //jeśli atrybut ma nulla, powtórz pętlę
+                        }
+                        ///koniec ekstra warunku bespieczeństwa
                     }//koniec generowania obiektu
                     if (++safety > 100) break;
                     //do tabliczki do sprawdzenia punktacji
@@ -472,6 +478,7 @@ namespace WpfApplication3
                         }
                     }
                 }
+                else return;
             }
             //tu dać walidację wygenerowanych danych
 
@@ -499,7 +506,7 @@ namespace WpfApplication3
                         }
                         if (y == 0) genClass[x] = (int)rr;
                         else genAttr_d[x][y - 1] = rr;
-                        
+
                     }
                 }
 
@@ -510,7 +517,8 @@ namespace WpfApplication3
                 int shift = (int)Math.Pow(10, FltPrecBox.SelectedIndex + 1);
                 for (int x = 0; x < generating.Count; x++)
                 {
-                    for (int y = 0; y < generating.ElementAt(0).Length -1; y++) {
+                    for (int y = 0; y < generating.ElementAt(0).Length - 1; y++)
+                    {
                         if (attrType[y].Equals("double"))
                             genAttr_i[x][y] = (int)(genAttr_d[x][y] * shift);
                         else
@@ -519,7 +527,7 @@ namespace WpfApplication3
                 }
                 for (int x = 0; x < reading.Count; x++)
                 {
-                    for (int y = 0; y < reading.ElementAt(0).Length -1; y++)
+                    for (int y = 0; y < reading.ElementAt(0).Length - 1; y++)
                     {
                         if (attrType[y].Equals("double"))
                             readAttr_i[x][y] = (int)(readAttr_d[x][y] * shift);
@@ -527,10 +535,10 @@ namespace WpfApplication3
                             readAttr_i[x][y] = (int)readAttr_d[x][y];
                     }
                 }
-                
+
 
                 int correctnb = 0, incorrectnb = 0, correctknn = 0, incorrectknn = 0, correctsvm = 0, incorrectsvm = 0;
-                
+
                 var learn = new NaiveBayesLearning();
                 NaiveBayes nb = learn.Learn(readAttr_i, readClass);
                 var test = nb.Decide(genAttr_i);
@@ -541,11 +549,11 @@ namespace WpfApplication3
                     else
                         incorrectnb++;
                 }
-                
+
                 /////////////////////////////////////////////////////////////////////////
 
                 var testknn = knn.Decide(genAttr_d);
-                for(int i = 0; i< testknn.Length;i++)
+                for (int i = 0; i < testknn.Length; i++)
                 //foreach (var v in testknn)
                 {
                     if (testknn[i].Equals(genClass[i]))
@@ -554,12 +562,12 @@ namespace WpfApplication3
                         incorrectknn++;
                 }
                 /////////////////////////////////////////////////////////////////////////
-                
-                
+
+
                 var teach = new MultilabelSupportVectorLearning<Gaussian>()
-                {    
+                {
                     // Configure the learning algorithm to use SMO to train the
-                     //  underlying SVMs in each of the binary class subproblems.
+                    //  underlying SVMs in each of the binary class subproblems.
                     Learner = (param) => new SequentialMinimalOptimization<Gaussian>()
                     {
                         // Estimate a suitable guess for the Gaussian kernel's parameters.
@@ -615,7 +623,7 @@ namespace WpfApplication3
 
                 //KROSWALIDACJAAAAAAAAAAAAAAAAAA
                 //KNN
-                
+
                 var crossvalidationRead = CrossValidation.Create(
                             k: 4,
                             learner: (p) => new KNearestNeighbors(k: 4),
@@ -653,7 +661,7 @@ namespace WpfApplication3
                 var genCM = resultGen.ToConfusionMatrix(genAttr_d, genClass);
                 double genAccuracy = genCM.Accuracy;
                 //////////////////////////////////////////////////////////
-               
+
                 var crossvalidationMix = CrossValidation.Create(
                             k: 4,
                             learner: (p) => new KNearestNeighbors(k: 4),
@@ -711,7 +719,7 @@ namespace WpfApplication3
                 var genCMnb = resultGennb.ToConfusionMatrix(genAttr_i, genClass);
                 double genAccuracynb = genCMnb.Accuracy;
                 //////////////////////////////////////////////////////////
-                
+
                 var crossvalidationMixnb = CrossValidation.Create(
                             k: 4,
                             learner: (p) => new NaiveBayesLearning(),
@@ -809,15 +817,15 @@ namespace WpfApplication3
 
                 System.Windows.MessageBox.Show(
                    "K Nearest Neighbours Classification:\nGenerated Data Correct Ratio: " +
-                   100.0 * correctknn / (correctknn + incorrectknn) + "%\n" + 
-                   "Original Data X-Validation Accuracy: " 
-                   + (100.0 * readAccuracy).ToString("0.00",System.Globalization.CultureInfo.InvariantCulture)
-                   + "%\n" + "Generated Data X-Validation Accuracy: " 
+                   100.0 * correctknn / (correctknn + incorrectknn) + "%\n" +
+                   "Original Data X-Validation Accuracy: "
+                   + (100.0 * readAccuracy).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
+                   + "%\n" + "Generated Data X-Validation Accuracy: "
                    + (100.0 * genAccuracy).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
-                   + "%\n" + "Mixed Data X-Validation Accuracy: " 
+                   + "%\n" + "Mixed Data X-Validation Accuracy: "
                    + (100.0 * mixAccuracy).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
-                   + "%\n" 
-                   +"\n\n" + "Naive Bayes Classification:\nGenerated Data Correct Ratio: " +
+                   + "%\n"
+                   + "\n\n" + "Naive Bayes Classification:\nGenerated Data Correct Ratio: " +
                    100.0 * correctnb / (correctnb + incorrectnb) + "%\n" +
                    "Original Data X-Validation Accuracy: "
                    + (100.0 * readAccuracynb).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
@@ -834,15 +842,16 @@ namespace WpfApplication3
                    + (100.0 * genAccuracysvm).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
                    + "%\n" + "Mixed Data X-Validation Accuracy: "
                    + (100.0 * mixAccuracysvm).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)*/
-                   + "%\n", 
+                   + "%\n",
                    "Data Testing - extending dataset",
                     System.Windows.MessageBoxButton.OK);
 
-            }
-            dialogResult = System.Windows.MessageBox.Show("Do you want to open the file with generated data?", "Data testing - extended data", System.Windows.MessageBoxButton.YesNo);
-            if (dialogResult == MessageBoxResult.Yes)
-            {
-                System.Diagnostics.Process.Start(savefiledir);
+
+                dialogResult = System.Windows.MessageBox.Show("Do you want to open the file with generated data?", "Data testing - extended data", System.Windows.MessageBoxButton.YesNo);
+                if (dialogResult == MessageBoxResult.Yes)
+                {
+                    System.Diagnostics.Process.Start(savefiledir);
+                }
             }
         }
 
