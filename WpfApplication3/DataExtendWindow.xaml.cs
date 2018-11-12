@@ -564,7 +564,7 @@ namespace WpfApplication3
                 /////////////////////////////////////////////////////////////////////////
 
 
-                var teach = new MultilabelSupportVectorLearning<Gaussian>()
+                var teach = new MulticlassSupportVectorLearning<Gaussian>()
                 {
                     // Configure the learning algorithm to use SMO to train the
                     //  underlying SVMs in each of the binary class subproblems.
@@ -576,29 +576,12 @@ namespace WpfApplication3
                     }
                 };
                 var svm = teach.Learn(readAttr_d, readClass);
-                // Create the multi-class learning algorithm for the machine
-                var calibration = new MultilabelSupportVectorLearning<Gaussian>()
-                {
-                    Model = svm, // We will start with an existing machine
-
-                    // Configure the learning algorithm to use SMO to train the
-                    //  underlying SVMs in each of the binary class subproblems.
-                    Learner = (param) => new ProbabilisticOutputCalibration<Gaussian>()
-                    {
-                        Model = param.Model // Start with an existing machine
-                    }
-                };
-                // Configure parallel execution options
-                calibration.ParallelOptions.MaxDegreeOfParallelism = 1;
-
-                // Learn a machine
-                var svmcal = calibration.Learn(readAttr_d, readClass);
-
-                var testsvm = svmcal.Decide(genAttr_d);
+                
+                var testsvm = svm.Decide(genAttr_d);
                 for (int i = 0; i < testsvm.Length; i++)
                 //foreach (var v in testknn)
                 {
-                    if (testsvm[i][genClass[i]])
+                    if (testsvm[i].Equals(genClass[i]))
                         correctsvm++;
                     else
                         incorrectsvm++;
@@ -742,10 +725,10 @@ namespace WpfApplication3
                 //SVM
 
                 ////ZAKOMENTOWAĆ PÓKI SIĘ NIE OGARNIE CO JEST NIE TAK
-                /*
+                
                 var crossvalidationReadsvm = CrossValidation.Create(
                             k: 4,
-                            learner: (p) => new MultilabelSupportVectorLearning<Gaussian>()
+                            learner: (p) => new MulticlassSupportVectorLearning<Gaussian>()
                             { Learner = (param) => new SequentialMinimalOptimization<Gaussian>()
                             { UseKernelEstimation = true  }
                             },
@@ -769,7 +752,7 @@ namespace WpfApplication3
                 //////////////////////////////////////////////////////////
                 var crossvalidationGensvm = CrossValidation.Create(
                             k: 4,
-                            learner: (p) => new MultilabelSupportVectorLearning<Gaussian>()
+                            learner: (p) => new MulticlassSupportVectorLearning<Gaussian>()
                             {
                                 Learner = (param) => new SequentialMinimalOptimization<Gaussian>()
                                 { UseKernelEstimation = true }
@@ -792,7 +775,7 @@ namespace WpfApplication3
 
                 var crossvalidationMixsvm = CrossValidation.Create(
                             k: 4,
-                            learner: (p) => new MultilabelSupportVectorLearning<Gaussian>()
+                            learner: (p) => new MulticlassSupportVectorLearning<Gaussian>()
                             {
                                 Learner = (param) => new SequentialMinimalOptimization<Gaussian>()
                                 { UseKernelEstimation = true }
@@ -812,7 +795,7 @@ namespace WpfApplication3
 
                 var mixCMsvm = resultMixsvm.ToConfusionMatrix(mixAttr_d, mixClass);
                 double mixAccuracysvm = mixCMsvm.Accuracy;
-                */
+                
                 /////////////////////////////////////////////////
 
                 System.Windows.MessageBox.Show(
@@ -835,13 +818,13 @@ namespace WpfApplication3
                    + (100.0 * mixAccuracynb).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
                    + "%\n" +
                    "\n\n" + "Support Vector Machine Classification:\nGenerated Data Correct Ratio: " +
-                   100.0 * correctsvm / (correctsvm + incorrectsvm)/* + "%\n" +
+                   100.0 * correctsvm / (correctsvm + incorrectsvm) + "%\n" +
                    "Original Data X-Validation Accuracy: "
                    + (100.0 * readAccuracysvm).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
                    + "%\n" + "Generated Data X-Validation Accuracy: "
                    + (100.0 * genAccuracysvm).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
                    + "%\n" + "Mixed Data X-Validation Accuracy: "
-                   + (100.0 * mixAccuracysvm).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)*/
+                   + (100.0 * mixAccuracysvm).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
                    + "%\n",
                    "Data Testing - extending dataset",
                     System.Windows.MessageBoxButton.OK);
