@@ -26,6 +26,8 @@ using Accord.Math.Optimization.Losses;
 using Accord.Statistics.Analysis;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
+using Accord.MachineLearning.VectorMachines.Learning;
+using Accord.Statistics.Kernels;
 
 namespace WpfApplication3
 {
@@ -307,10 +309,40 @@ namespace WpfApplication3
                         gcm = result2.ToConfusionMatrix(inputs_d, outputs);
                         double knn_accuracy = gcm.Accuracy;
 
+                        //............................
+
+                        var crossvalidationsvm = CrossValidation.Create(
+                            k: 4,
+                            learner: (p) => new MulticlassSupportVectorLearning<Gaussian>()
+                            {
+                                Learner = (param) => new SequentialMinimalOptimization<Gaussian>()
+                                { UseKernelEstimation = true }
+                            },
+                            loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
+                            fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
+                            x: inputs_d, y: outputs
+                            );
+                        //crossvalidationReadsvm.ParallelOptions.MaxDegreeOfParallelism = 1;
+                        var resultsvm = crossvalidationsvm.Learn(inputs_d, outputs);
+                        // We can grab some information about the problem:
+                        var numberOfSamplessvm = resultsvm.NumberOfSamples;
+                        var numberOfInputssvm = resultsvm.NumberOfInputs;
+                        var numberOfOutputssvm = resultsvm.NumberOfOutputs;
+
+                        var trainingErrorsvm = resultsvm.Training.Mean;
+                        var validationErrorsvm = resultsvm.Validation.Mean;
+
+                        var CMsvm = resultsvm.ToConfusionMatrix(inputs_d, outputs);
+                        double svm_accuracy = CMsvm.Accuracy;
+
+
                         System.Windows.MessageBox.Show("Naive Bayes Accuracy: " + (nb_accuracy* 100)
                             .ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
                              + "%\n" + 
                             "\nk Nearest Neighbors Accuracy: " + (knn_accuracy*100)
+                            .ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
+                            + "%\n" +
+                            "\nSupport Vector Machine Accuracy: " + (svm_accuracy * 100)
                             .ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
                             + "%\n", "Data testing - crossvalidation", System.Windows.MessageBoxButton.OK);
 

@@ -386,11 +386,15 @@ namespace WpfApplication3
 
             double[] attrcr = new double[attribs];
 
+
+            string[] bestattr = new string[attribs];
+            double bestscore;
+
             //czas generować ten szajs
             var newStuff = new string[newData, attribs + 1];
             for (int it = 0; it < newStuff.GetLength(0); it++)
             {
-
+                bestscore = 0;
                 
                 int cl = rnd.Next(classes); //rnd to zadelkarowany wcześniej Random //losowanie klasy
                 newStuff[it, 0] = values.ElementAt(cl).Key;
@@ -429,7 +433,8 @@ namespace WpfApplication3
                         }
                         ///koniec ekstra warunku bespieczeństwa
                     }//koniec generowania obiektu
-                    if (++safety > 100) break;
+
+
                     //do tabliczki do sprawdzenia punktacji
                     for (int v = 1; v <= attribs; v++) {
                         double rr = 0;
@@ -442,8 +447,15 @@ namespace WpfApplication3
                         }
                         attrcr[v - 1] = rr;
                     }
-                } while (knn.Score(attrcr, cl) < scoreH /100);
+                    if (knn.Score(attrcr, cl) > bestscore) {
+                        for (int iter = 0; iter < attribs; iter++)
+                            bestattr[iter] = newStuff[it, iter+1];
+                    }
 
+                } while (knn.Score(attrcr, cl) < scoreH /100 && ++safety < 1000);
+
+                for (int iter = 0; iter < attribs; iter++)
+                    newStuff[it, iter + 1] = bestattr[iter];
             }//koniec całego generowania
 
             //tu dać zapis do pliku
@@ -723,8 +735,7 @@ namespace WpfApplication3
                 double mixAccuracynb = mixCMnb.Accuracy;
 
                 //SVM
-
-                ////ZAKOMENTOWAĆ PÓKI SIĘ NIE OGARNIE CO JEST NIE TAK
+                
                 
                 var crossvalidationReadsvm = CrossValidation.Create(
                             k: 4,
@@ -830,11 +841,12 @@ namespace WpfApplication3
                     System.Windows.MessageBoxButton.OK);
 
 
-                dialogResult = System.Windows.MessageBox.Show("Do you want to open the file with generated data?", "Data testing - extended data", System.Windows.MessageBoxButton.YesNo);
-                if (dialogResult == MessageBoxResult.Yes)
-                {
-                    System.Diagnostics.Process.Start(savefiledir);
-                }
+                
+            }
+            dialogResult = System.Windows.MessageBox.Show("Do you want to open the file with generated data?", "Data testing - extended data", System.Windows.MessageBoxButton.YesNo);
+            if (dialogResult == MessageBoxResult.Yes)
+            {
+                System.Diagnostics.Process.Start(savefiledir);
             }
         }
 
