@@ -338,7 +338,7 @@ namespace WpfApplication3
                         SortedList<double, int> temp = new SortedList<double, int>();
                         foreach (var v in values.ElementAt(j).Value.Item2.ElementAt(i).Value)
                         {
-                            int tI = v.Value; double tD = Double.Parse(v.Key,
+                            int tI = v.Value; double tD = Double.Parse(v.Key.Replace(" ", string.Empty),
                                 System.Globalization.NumberStyles.AllowDecimalPoint,
                                 System.Globalization.NumberFormatInfo.InvariantInfo);
                             temp.Add(tD, tI);
