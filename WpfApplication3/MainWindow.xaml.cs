@@ -345,7 +345,16 @@ namespace WpfApplication3
                             "\nSupport Vector Machine Accuracy: " + (svm_accuracy * 100)
                             .ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
                             + "%\n", "Data testing - crossvalidation", System.Windows.MessageBoxButton.OK);
+                        using (var write = new System.IO.StreamWriter("TestDataDump.txt"))
+                        {
+                            write.WriteLine("GeneratedDataAmt," + outputs.Length);
+                            write.WriteLine("Accuracy," +
+                                    (100.0 * knn_accuracy).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "," +
+                                    (100.0 * nb_accuracy).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "," +
+                                    (100.0 * svm_accuracy).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
 
+                        }
+                        System.Diagnostics.Process.Start("TestDataDump.txt");
                         dialogResult = System.Windows.MessageBox.Show("Do you want to open the file with generated data?", "Data testing - extended data", System.Windows.MessageBoxButton.YesNo);
                         if (dialogResult == MessageBoxResult.Yes)
                         {
