@@ -821,9 +821,12 @@ namespace WpfApplication3
                 catch (AggregateException) { }
                 /////////////////////////////////////////////////
                 if (correctsvm == 0 && incorrectsvm == 0) incorrectsvm = 1;
+                double knnRatio = 100.0 * correctknn / (correctknn + incorrectknn),
+                    nbRatio = 100.0 * correctnb / (correctnb + incorrectnb),
+                    svmRatio = 100.0 * correctsvm / (correctsvm + incorrectsvm);
                 System.Windows.MessageBox.Show(
                    "K Nearest Neighbours Classification:\nGenerated Data Correct Ratio: " +
-                   100.0 * correctknn / (correctknn + incorrectknn) + "%\n" +
+                   knnRatio.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "%\n" +
                    "Original Data X-Validation Accuracy: "
                    + (100.0 * readAccuracy).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
                    + "%\n" + "Generated Data X-Validation Accuracy: "
@@ -832,7 +835,7 @@ namespace WpfApplication3
                    + (100.0 * mixAccuracy).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
                    + "%\n"
                    + "\n\n" + "Naive Bayes Classification:\nGenerated Data Correct Ratio: " +
-                   100.0 * correctnb / (correctnb + incorrectnb) + "%\n" +
+                   nbRatio.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "%\n" +
                    "Original Data X-Validation Accuracy: "
                    + (100.0 * readAccuracynb).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
                    + "%\n" + "Generated Data X-Validation Accuracy: "
@@ -841,7 +844,7 @@ namespace WpfApplication3
                    + (100.0 * mixAccuracynb).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
                    + "%\n" +
                    "\n\n" + "Support Vector Machine Classification:\nGenerated Data Correct Ratio: " +
-                   100.0 * correctsvm / (correctsvm + incorrectsvm) + "%\n" +
+                   svmRatio.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "%\n" +
                    "Original Data X-Validation Accuracy: "
                    + (100.0 * readAccuracysvm).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
                    + "%\n" + "Generated Data X-Validation Accuracy: "
@@ -852,8 +855,30 @@ namespace WpfApplication3
                    "Data Testing - extending dataset",
                     System.Windows.MessageBoxButton.OK);
 
+                ///TEMP - do eksportowania danych do arkusza
 
-                
+                    using (var write = new System.IO.StreamWriter("TestDataDump.txt")){
+                        write.WriteLine("ScoreTreshold," + scoreH.ToString());
+                        write.WriteLine("NewDataAmt," + newData.ToString());
+                        write.WriteLine("Generated Data Correct Ratio," +
+                            knnRatio.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "," +
+                            nbRatio.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) +"," +
+                            svmRatio.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
+                        write.WriteLine("Original Data X-Validation Accuracy," + 
+                            (100.0 * readAccuracy).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "," +
+                            (100.0 * readAccuracynb).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "," +
+                            (100.0 * readAccuracysvm).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
+                        write.WriteLine("Generated Data X-Validation Accuracy," +
+                            (100.0 * genAccuracy).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "," +
+                            (100.0 * genAccuracynb).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "," +
+                            (100.0 * genAccuracysvm).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
+                    write.WriteLine("Mixed Data X-Validation Accuracy," +
+                            (100.0 * mixAccuracy).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "," +
+                            (100.0 * mixAccuracynb).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "," +
+                            (100.0 * mixAccuracysvm).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
+
+                }
+                    System.Diagnostics.Process.Start("TestDataDump.txt");
             }
             dialogResult = System.Windows.MessageBox.Show("Do you want to open the file with generated data?", "Data testing - extended data", System.Windows.MessageBoxButton.YesNo);
             if (dialogResult == MessageBoxResult.Yes)
