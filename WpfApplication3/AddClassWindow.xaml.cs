@@ -65,7 +65,7 @@ namespace WpfApplication3
 
         private void ClassSize_TextChanged(object sender, TextChangedEventArgs e)
         {
-            ClassSize.Text = Regex.Replace(ClassSize.Text, @"[^\d-]", string.Empty);
+            ClassSize.Text = Regex.Replace(ClassSize.Text, @"[^\d]", string.Empty);
             ClassSize.SelectionStart = ClassSize.Text.Length; // add some logic if length is 0
             ClassSize.SelectionLength = 0; 
         }

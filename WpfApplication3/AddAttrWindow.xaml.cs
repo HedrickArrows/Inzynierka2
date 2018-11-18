@@ -112,10 +112,17 @@ namespace WpfApplication3
         }
 
         private void ValidateNumberText(TextBox txt) {
-            if(AttrType.SelectedIndex.Equals(2))
+            if (AttrType.SelectedIndex.Equals(2))
                 txt.Text = Regex.Replace(txt.Text, @"[^\d-.]", string.Empty);
-            else
+            else if (AttrType.SelectedIndex.Equals(1))
                 txt.Text = Regex.Replace(txt.Text, @"[^\d-]", string.Empty);
+            else {
+                txt.Text = Regex.Replace(txt.Text, @"[^\d]", string.Empty);
+                int t;
+                if (int.TryParse(txt.Text, out t))
+                    if (t < 0 || t > 100)
+                        txt.Text = Math.Max(0, Math.Min(100, t)).ToString();
+            }
             txt.SelectionStart = txt.Text.Length; // add some logic if length is 0
             txt.SelectionLength = 0;
         }

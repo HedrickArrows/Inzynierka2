@@ -296,7 +296,7 @@ namespace WpfApplication3
 
         private void ValidateNumberText(System.Windows.Controls.TextBox txt)
         {
-            txt.Text = Regex.Replace(txt.Text, @"[^\d-]", string.Empty);
+            txt.Text = Regex.Replace(txt.Text, @"[^\d]", string.Empty);
             txt.SelectionStart = txt.Text.Length; // add some logic if length is 0
             txt.SelectionLength = 0;
         }
@@ -575,29 +575,32 @@ namespace WpfApplication3
                 }
                 /////////////////////////////////////////////////////////////////////////
 
-
-                var teach = new MulticlassSupportVectorLearning<Gaussian>()
+                try
                 {
-                    // Configure the learning algorithm to use SMO to train the
-                    //  underlying SVMs in each of the binary class subproblems.
-                    Learner = (param) => new SequentialMinimalOptimization<Gaussian>()
+                    var teach = new MulticlassSupportVectorLearning<Gaussian>()
                     {
-                        // Estimate a suitable guess for the Gaussian kernel's parameters.
-                        // This estimate can serve as a starting point for a grid search.
-                        UseKernelEstimation = true
+                        // Configure the learning algorithm to use SMO to train the
+                        //  underlying SVMs in each of the binary class subproblems.
+                        Learner = (param) => new SequentialMinimalOptimization<Gaussian>()
+                        {
+                            // Estimate a suitable guess for the Gaussian kernel's parameters.
+                            // This estimate can serve as a starting point for a grid search.
+                            UseKernelEstimation = true
+                        }
+                    };
+                    var svm = teach.Learn(readAttr_d, readClass);
+
+                    var testsvm = svm.Decide(genAttr_d);
+                    for (int i = 0; i < testsvm.Length; i++)
+                    //foreach (var v in testknn)
+                    {
+                        if (testsvm[i].Equals(genClass[i]))
+                            correctsvm++;
+                        else
+                            incorrectsvm++;
                     }
-                };
-                var svm = teach.Learn(readAttr_d, readClass);
-                
-                var testsvm = svm.Decide(genAttr_d);
-                for (int i = 0; i < testsvm.Length; i++)
-                //foreach (var v in testknn)
-                {
-                    if (testsvm[i].Equals(genClass[i]))
-                        correctsvm++;
-                    else
-                        incorrectsvm++;
                 }
+                catch (AggregateException) { }
                 ////////////////////////////////////////////////////////////
 
                 double[][] mixAttr_d = new double[genAttr_d.GetLength(0) + readAttr_d.GetLength(0),
@@ -735,80 +738,89 @@ namespace WpfApplication3
                 double mixAccuracynb = mixCMnb.Accuracy;
 
                 //SVM
-                
-                
-                var crossvalidationReadsvm = CrossValidation.Create(
-                            k: 4,
-                            learner: (p) => new MulticlassSupportVectorLearning<Gaussian>()
-                            { Learner = (param) => new SequentialMinimalOptimization<Gaussian>()
-                            { UseKernelEstimation = true  }
-                            },
-                            loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
-                            fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
-                            x: readAttr_d, y: readClass
-                            );
-                //crossvalidationReadsvm.ParallelOptions.MaxDegreeOfParallelism = 1;
-                var resultReadsvm = crossvalidationReadsvm.Learn(readAttr_d, readClass);
-                // We can grab some information about the problem:
-                var numberOfSamplesReadsvm = resultReadsvm.NumberOfSamples;
-                var numberOfInputsReadsvm = resultReadsvm.NumberOfInputs;
-                var numberOfOutputsReadsvm = resultReadsvm.NumberOfOutputs;
+                double readAccuracysvm = 0, genAccuracysvm = 0, mixAccuracysvm = 0;
+                try
+                {
+                    var crossvalidationReadsvm = CrossValidation.Create(
+                                k: 4,
+                                learner: (p) => new MulticlassSupportVectorLearning<Gaussian>()
+                                {
+                                    Learner = (param) => new SequentialMinimalOptimization<Gaussian>()
+                                    { UseKernelEstimation = true }
+                                },
+                                loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
+                                fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
+                                x: readAttr_d, y: readClass
+                                );
+                    //crossvalidationReadsvm.ParallelOptions.MaxDegreeOfParallelism = 1;
+                    var resultReadsvm = crossvalidationReadsvm.Learn(readAttr_d, readClass);
+                    // We can grab some information about the problem:
+                    var numberOfSamplesReadsvm = resultReadsvm.NumberOfSamples;
+                    var numberOfInputsReadsvm = resultReadsvm.NumberOfInputs;
+                    var numberOfOutputsReadsvm = resultReadsvm.NumberOfOutputs;
 
-                var trainingErrorReadsvm = resultReadsvm.Training.Mean;
-                var validationErrorReadsvm = resultReadsvm.Validation.Mean;
+                    var trainingErrorReadsvm = resultReadsvm.Training.Mean;
+                    var validationErrorReadsvm = resultReadsvm.Validation.Mean;
 
-                var readCMsvm = resultReadsvm.ToConfusionMatrix(readAttr_d, readClass);
-                double readAccuracysvm = readCMsvm.Accuracy;
-                
+                    var readCMsvm = resultReadsvm.ToConfusionMatrix(readAttr_d, readClass);
+                    readAccuracysvm = readCMsvm.Accuracy;
+                }
+                catch (AggregateException) { }
                 //////////////////////////////////////////////////////////
-                var crossvalidationGensvm = CrossValidation.Create(
-                            k: 4,
-                            learner: (p) => new MulticlassSupportVectorLearning<Gaussian>()
-                            {
-                                Learner = (param) => new SequentialMinimalOptimization<Gaussian>()
-                                { UseKernelEstimation = true }
-                            },
-                            loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
-                            fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
-                            x: genAttr_d, y: genClass
-                            );
-                var resultGensvm = crossvalidationGensvm.Learn(genAttr_d, genClass);
-                // We can grab some information about the problem:
-                var numberOfSamplesGensvm = resultGensvm.NumberOfSamples;
-                var numberOfInputsGensvm = resultGensvm.NumberOfInputs;
-                var numberOfOutputsGensvm = resultGensvm.NumberOfOutputs;
+                try
+                {
+                    var crossvalidationGensvm = CrossValidation.Create(
+                                k: 4,
+                                learner: (p) => new MulticlassSupportVectorLearning<Gaussian>()
+                                {
+                                    Learner = (param) => new SequentialMinimalOptimization<Gaussian>()
+                                    { UseKernelEstimation = true }
+                                },
+                                loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
+                                fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
+                                x: genAttr_d, y: genClass
+                                );
+                    var resultGensvm = crossvalidationGensvm.Learn(genAttr_d, genClass);
+                    // We can grab some information about the problem:
+                    var numberOfSamplesGensvm = resultGensvm.NumberOfSamples;
+                    var numberOfInputsGensvm = resultGensvm.NumberOfInputs;
+                    var numberOfOutputsGensvm = resultGensvm.NumberOfOutputs;
 
-                var trainingErrorGensvm = resultGensvm.Training.Mean;
-                var validationErrorGensvm = resultGensvm.Validation.Mean;
-                var genCMsvm = resultGensvm.ToConfusionMatrix(genAttr_d, genClass);
-                double genAccuracysvm = genCMsvm.Accuracy;
+                    var trainingErrorGensvm = resultGensvm.Training.Mean;
+                    var validationErrorGensvm = resultGensvm.Validation.Mean;
+                    var genCMsvm = resultGensvm.ToConfusionMatrix(genAttr_d, genClass);
+                    genAccuracysvm = genCMsvm.Accuracy;
+                }
+                catch (AggregateException) { }
                 //////////////////////////////////////////////////////////
+                try
+                {
+                    var crossvalidationMixsvm = CrossValidation.Create(
+                                k: 4,
+                                learner: (p) => new MulticlassSupportVectorLearning<Gaussian>()
+                                {
+                                    Learner = (param) => new SequentialMinimalOptimization<Gaussian>()
+                                    { UseKernelEstimation = true }
+                                },
+                                loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
+                                fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
+                                x: mixAttr_d, y: mixClass
+                                );
+                    var resultMixsvm = crossvalidationMixsvm.Learn(mixAttr_d, mixClass);
+                    // We can grab some information about the problem:
+                    var numberOfSamplesMixsvm = resultMixsvm.NumberOfSamples;
+                    var numberOfInputsMixsvm = resultMixsvm.NumberOfInputs;
+                    var numberOfOutputsMixsvm = resultMixsvm.NumberOfOutputs;
 
-                var crossvalidationMixsvm = CrossValidation.Create(
-                            k: 4,
-                            learner: (p) => new MulticlassSupportVectorLearning<Gaussian>()
-                            {
-                                Learner = (param) => new SequentialMinimalOptimization<Gaussian>()
-                                { UseKernelEstimation = true }
-                            },
-                            loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
-                            fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
-                            x: mixAttr_d, y: mixClass
-                            );
-                var resultMixsvm = crossvalidationMixsvm.Learn(mixAttr_d, mixClass);
-                // We can grab some information about the problem:
-                var numberOfSamplesMixsvm = resultMixsvm.NumberOfSamples;
-                var numberOfInputsMixsvm = resultMixsvm.NumberOfInputs;
-                var numberOfOutputsMixsvm = resultMixsvm.NumberOfOutputs;
+                    var trainingErrorMixsvm = resultMixsvm.Training.Mean;
+                    var validationErrorMixsvm = resultMixsvm.Validation.Mean;
 
-                var trainingErrorMixsvm = resultMixsvm.Training.Mean;
-                var validationErrorMixsvm = resultMixsvm.Validation.Mean;
-
-                var mixCMsvm = resultMixsvm.ToConfusionMatrix(mixAttr_d, mixClass);
-                double mixAccuracysvm = mixCMsvm.Accuracy;
-                
+                    var mixCMsvm = resultMixsvm.ToConfusionMatrix(mixAttr_d, mixClass);
+                    mixAccuracysvm = mixCMsvm.Accuracy;
+                }
+                catch (AggregateException) { }
                 /////////////////////////////////////////////////
-
+                if (correctsvm == 0 && incorrectsvm == 0) incorrectsvm = 1;
                 System.Windows.MessageBox.Show(
                    "K Nearest Neighbours Classification:\nGenerated Data Correct Ratio: " +
                    100.0 * correctknn / (correctknn + incorrectknn) + "%\n" +
