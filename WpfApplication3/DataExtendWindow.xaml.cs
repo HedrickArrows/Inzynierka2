@@ -101,33 +101,33 @@ namespace WpfApplication3
                         }
                     }
                 }
-            }
-            clsColBoxSrc.Clear();
-            for (int i = 0; i < attrType.Length; i++)
-                clsColBoxSrc.Add(i);
-            ClsColBox.ItemsSource = clsColBoxSrc;
-            ClsColBox.SelectedIndex = 0;
-            InputDataGrid.Columns.Clear();
             
-            var d = new List<Dictionary<string, string>>();
-            foreach (var v in reading) {
-                var d2 = new Dictionary<string, string>();
-                for (int i = 0; i < v.Length; i++)
-                    d2.Add(String.Format("Column{0}", i), v.ElementAt(i));
-                d.Add(d2);
-            }
-
-            for (int i = 0; i < reading.ElementAt(0).Length; i++)
-            {
-                string propertyName = String.Format("Column{0}", i);
-                var column = new DataGridTextColumn();
-                column.Binding = new System.Windows.Data.Binding() { Converter = new MyConverter(), ConverterParameter = propertyName };
-                column.Header = propertyName;
-                InputDataGrid.Columns.Add(column);
-            }
-
-            InputDataGrid.ItemsSource = d;
+                clsColBoxSrc.Clear();
+                for (int i = 0; i < attrType.Length; i++)
+                    clsColBoxSrc.Add(i);
+                ClsColBox.ItemsSource = clsColBoxSrc;
+                ClsColBox.SelectedIndex = 0;
+                InputDataGrid.Columns.Clear();
             
+                var d = new List<Dictionary<string, string>>();
+                foreach (var v in reading) {
+                    var d2 = new Dictionary<string, string>();
+                    for (int i = 0; i < v.Length; i++)
+                        d2.Add(String.Format("Column{0}", i), v.ElementAt(i));
+                    d.Add(d2);
+                }
+
+                for (int i = 0; i < reading.ElementAt(0).Length; i++)
+                {
+                    string propertyName = String.Format("Column{0}", i);
+                    var column = new DataGridTextColumn();
+                    column.Binding = new System.Windows.Data.Binding() { Converter = new MyConverter(), ConverterParameter = propertyName };
+                    column.Header = propertyName;
+                    InputDataGrid.Columns.Add(column);
+                }
+
+                InputDataGrid.ItemsSource = d;
+            }
         }
 
         public class MyConverter : IValueConverter //isnieje tylko po to żeby wyświetlać dane w okienku
