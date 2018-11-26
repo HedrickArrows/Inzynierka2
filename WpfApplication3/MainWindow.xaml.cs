@@ -287,11 +287,11 @@ namespace WpfApplication3
                         double nb_accuracy = gcm.Accuracy;
 
                         //..................    
-
+                        int classesSqrt = (int)Math.Round(Math.Sqrt(outputs.Length));
                         
                         var crossvalidation = CrossValidation.Create(
                             k: 4,
-                            learner: (p) => new KNearestNeighbors(k: 4),
+                            learner: (p) => new KNearestNeighbors(k: classesSqrt),
                             loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
                             fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
                             x: inputs_d, y: outputs

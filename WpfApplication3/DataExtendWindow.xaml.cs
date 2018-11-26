@@ -379,8 +379,9 @@ namespace WpfApplication3
                             readAttr_d[x][y - 1] = rr;
                     }
                 }
-
-            var learnKnn = new KNearestNeighbors(4);
+            int readClassesSqrt = (int)Math.Round(Math.Sqrt(reading.Count)),
+                genClassesSqrt, mixClassesSqrt;
+            var learnKnn = new KNearestNeighbors(readClassesSqrt);
 
             var knn = learnKnn.Learn(readAttr_d, readClass);
 
@@ -620,11 +621,14 @@ namespace WpfApplication3
                 Array.Copy(genAttr_i, 0, mixAttr_i, readAttr_i.Length, genAttr_i.Length);
 
                 //KROSWALIDACJAAAAAAAAAAAAAAAAAA
+                genClassesSqrt = (int)Math.Round(Math.Sqrt(genClass.Length));
+                mixClassesSqrt = (int)Math.Round(Math.Sqrt(mixClass.Length));
+
                 //KNN
 
                 var crossvalidationRead = CrossValidation.Create(
                             k: 4,
-                            learner: (p) => new KNearestNeighbors(k: 4),
+                            learner: (p) => new KNearestNeighbors(k: readClassesSqrt),
                             loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
                             fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
                             x: readAttr_d, y: readClass
@@ -643,7 +647,7 @@ namespace WpfApplication3
                 //////////////////////////////////////////////////////////
                 var crossvalidationGen = CrossValidation.Create(
                             k: 4,
-                            learner: (p) => new KNearestNeighbors(k: 4),
+                            learner: (p) => new KNearestNeighbors(k: genClassesSqrt),
                             loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
                             fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
                             x: genAttr_d, y: genClass
@@ -662,7 +666,7 @@ namespace WpfApplication3
 
                 var crossvalidationMix = CrossValidation.Create(
                             k: 4,
-                            learner: (p) => new KNearestNeighbors(k: 4),
+                            learner: (p) => new KNearestNeighbors(k: mixClassesSqrt),
                             loss: (actual, expected, p) => new ZeroOneLoss(expected).Loss(actual),
                             fit: (teacher, x, y, w) => teacher.Learn(x, y, w),
                             x: mixAttr_d, y: mixClass
