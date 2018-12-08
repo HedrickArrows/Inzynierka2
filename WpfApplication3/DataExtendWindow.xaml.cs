@@ -858,7 +858,7 @@ namespace WpfApplication3
                    + "%\n",
                    "Data Testing - extending dataset",
                     System.Windows.MessageBoxButton.OK);
-
+                /*
                 ///TEMP - do eksportowania danych do arkusza
 
                     using (var write = new System.IO.StreamWriter("TestDataDump.txt")){
@@ -883,6 +883,7 @@ namespace WpfApplication3
 
                 }
                     System.Diagnostics.Process.Start("TestDataDump.txt");
+                    */
             }
             dialogResult = System.Windows.MessageBox.Show("Do you want to open the file with generated data?", "Data testing - extended data", System.Windows.MessageBoxButton.YesNo);
             if (dialogResult == MessageBoxResult.Yes)

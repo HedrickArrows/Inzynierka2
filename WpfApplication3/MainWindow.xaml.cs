@@ -39,14 +39,22 @@ namespace WpfApplication3
         public static Random rnd;
         public static float randomFocused(float min, float max, float focus) //generuje liczbe pseudolosową, z większą szansą na konkretny wynik
         {
-            if (focus > max - 2) focus = max - 2;
+            if (focus > max) focus = max - 0.1f;
             if (focus < min) focus = min;
-            double A, res, r;
+            double A, res, r;// fMin, fMax, ratio;
 
             r = (max - min) * rnd.NextDouble() + min;
             if (r < focus) A = -1; else A = 1;
-            res = A * Math.Pow(r - focus, 2) + focus * focus;
-            return (float)res / (max - 1);
+            res = A * Math.Pow(r - focus, 2) + focus*focus;
+            //fMin = -1 * Math.Pow(min - focus, 2) + focus * focus;
+            //fMax = Math.Pow(max - focus, 2) + focus * focus;
+            //ratio = (max - min) / (fMax - fMin);
+
+            res = (res - min)/(max-min) + min;
+
+            res = res > max ? max : res < min ? min : res;
+
+            return (float)res;
         }
 
         public abstract class Attribute
@@ -233,19 +241,18 @@ namespace WpfApplication3
                         //foreach (var v in attrs)
                         //    line += "," + v.Key;
                         //file.WriteLine(line);
-                        foreach (var v in classes)
-                            for (int n = 0; n < v.Value; n++) {
-                                line = v.Key;
-                                classValues.Add(classes.IndexOf(v));
+                        for(int v = 0; v < classes.Count; v++)
+                        //foreach (var v in classes)
+                            for (int n = 0; n < classes[v].Value; n++) {
+                                line = classes[v].Key;
+                                classValues.Add(v);
                                 List<float> aVals = new List<float>(); 
 
-                                int t = 0;
-                                foreach (var a in classAttrs[classes.IndexOf(v)])
+                                for(int t = 0; t < classAttrs[v].Count; t++)
                                 {
-                                    float aVal = attrs[t].Value.genetare(v.Value);
+                                    float aVal = attrs[t].Value.genetare(classAttrs[v][t]);
                                     aVals.Add(aVal);
                                     line += "," + aVal.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                                    t++;
                                 }
 
                                 attrValues.Add(aVals.ToArray<float>());
