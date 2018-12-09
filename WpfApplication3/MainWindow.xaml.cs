@@ -50,7 +50,7 @@ namespace WpfApplication3
             //fMax = Math.Pow(max - focus, 2) + focus * focus;
             //ratio = (max - min) / (fMax - fMin);
 
-            res = (res - min)/(max-min) + min;
+            res = Math.Sqrt(res); //(res - min)/(max-min) + min;
 
             res = res > max ? max : res < min ? min : res;
 
