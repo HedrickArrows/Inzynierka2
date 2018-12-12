@@ -41,16 +41,13 @@ namespace WpfApplication3
         {
             if (focus > max) focus = max - 0.1f;
             if (focus < min) focus = min;
-            double A, res, r;// fMin, fMax, ratio;
+            double A, res, r;
 
             r = (max - min) * rnd.NextDouble() + min;
             if (r < focus) A = -1; else A = 1;
             res = A * Math.Pow(r - focus, 2) + focus*focus;
-            //fMin = -1 * Math.Pow(min - focus, 2) + focus * focus;
-            //fMax = Math.Pow(max - focus, 2) + focus * focus;
-            //ratio = (max - min) / (fMax - fMin);
 
-            res = Math.Sqrt(res); //(res - min)/(max-min) + min;
+            res = Math.Sqrt(res); 
 
             res = res > max ? max : res < min ? min : res;
 
@@ -361,7 +358,7 @@ namespace WpfApplication3
                                     (100.0 * svm_accuracy).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
 
                         }
-                        System.Diagnostics.Process.Start("TestDataDump.txt");
+                        //System.Diagnostics.Process.Start("TestDataDump.txt");
                         dialogResult = System.Windows.MessageBox.Show("Do you want to open the file with generated data?", "Data testing - extended data", System.Windows.MessageBoxButton.YesNo);
                         if (dialogResult == MessageBoxResult.Yes)
                         {
