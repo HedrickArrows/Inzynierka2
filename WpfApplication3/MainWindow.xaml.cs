@@ -51,7 +51,8 @@ namespace WpfApplication3
 
             res = res > max ? max : res < min ? min : res;
 
-            return (float)res;
+            float rounded = (float)(Math.Round(res, 2));
+            return rounded;
         }
 
         public abstract class Attribute

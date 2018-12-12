@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfApplication3"
+        ResizeMode="NoResize"
         mc:Ignorable="d"
         Title="Data Extending" Height="609.805" Width="713.927">
     <Grid Margin="0,0,0,1">
